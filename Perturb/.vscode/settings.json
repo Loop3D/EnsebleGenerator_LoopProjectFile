@@ -1,0 +1,9 @@
+{
+    "python.pythonPath": "C:\\Users\\00103098\\.conda\\envs\\EnGen_Jan\\python.exe",
+    //"python.pythonPath": ".LSFile\\Scripts\\python.exe",
+    "python.linting.pylintPath" : "C:\\Users\\00103098\\AppData\\Local\\Programs\\Python\\Python37\\Scripts\\pylint.exe",
+    "python.linting.pythonEnabled" : true,
+    "python.linting.Enabled" : true,
+    "python.linting.pylintArgs": ["--generate-members"],
+   
+}

@@ -1,0 +1,5 @@
+samples,5
+error_gps,100
+file_type,faults
+distribution,uniform
+DEM,False

@@ -1,0 +1,10 @@
+samples,5,
+error_gps,100
+Group_type,'interface'
+distribution,'uniform'
+global_intf_contact_grp_type ,AB
+global_intf_fault_grp_type ,AB
+local interface bool val ,True
+local fault bool val ,AB
+distribution,'uniform'
+DEM,False ,

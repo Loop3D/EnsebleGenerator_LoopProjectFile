@@ -1,0 +1,17 @@
+numpy
+pandas
+geopandas
+pyproj
+shapely
+rasterio
+descartes
+matplotlib-base
+networkx
+scipy
+owslib
+tqdm
+map2model
+mplstereonet
+hjson
+loopprojectfile
+cftime>=1.4.0

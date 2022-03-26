@@ -1,0 +1,5 @@
+path_to_m2l_files,path_to_perturb_models,netcdf_file_name,egen_runs,dem,source_geomodeller,intf_contact_grp_type,intf_fault_grp_type,ori_strati_grp_type,ori_fault_grp_type,global_intf_contact_grp_type,global_intf_fault_grp_type,global_ori_strati_grp_type,global_ori_fault_grp_type,local_bool_intf_contact_grp_type,local_bool_intf_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_grp_type,intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault_eventid,distribution,loc_distribution,error_gps,kappa,perturb
+"'../Netcdf_map2l/',","'../egen_runs/',","'wa1.loop3d',","5,","False ,",False,'contacts',,,,True,,,,,,,,,,,,'uniform',,100,,'interface'
+"'../Netcdf_map2l/',","'../egen_runs/',","'wa1.loop3d',","5,","False ,",False,,'faultobservations',,,,,,,,True,,,,"[2235,11442]",,,'uniform',,100,,'interface'
+"'../Netcdf_map2l/',","'../egen_runs/',","'wa1.loop3d',","5,","False ,",False,,'faultobservations',,,,True,,,,,,,,,,,'uniform',,100,,'interface'
+"'../Netcdf_map2l/',","'../egen_runs/',","'wa1.loop3d',","5,","False ,",False,'contacts',,,,,,,,True,,,,[4],,,,'uniform',,100,,'interface'
