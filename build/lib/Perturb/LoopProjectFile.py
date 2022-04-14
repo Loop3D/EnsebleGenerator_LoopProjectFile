@@ -285,7 +285,7 @@ def Get(filename, element, **kwargs):
         elif element == "foldObservations": response = DataCollection.GetFoldObservations(root,**kwargs)
         elif element == "foliationObservations": response = DataCollection.GetFoliationObservations(root,**kwargs)
         elif element == "discontinuityObservations": response = DataCollection.GetDiscontinuityObservations(root,**kwargs)
-        elif element == "stratigraphicObservations": response = DataCollection.GetStratigraphicObservations(root,**kwargs)
+        elif element == "stratigraphicObservations": response = DC.GetStratigraphicObservations(root,**kwargs)
         elif element == "contacts": response = DC.GetContacts(root,**kwargs)
         elif element == "stratigraphicLog": response = ExtractedInformation.GetStratigraphicLog(root,**kwargs)
         elif element == "faultLog": response = ExtractedInformation.GetFaultLog(root,**kwargs)
