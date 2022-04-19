@@ -1,6 +1,5 @@
 
 import Perturb.LoopProjectFile  as LF
-#import ncdump
 import scipy.stats as ss
 import pandas as pd
 import numpy 
@@ -11,7 +10,6 @@ import random
 from Perturb.m2l_utils_egen import ddd2dircos
 from Perturb.m2l_utils_egen import dircos2ddd
 from Perturb.spherical_utils import sample_vMF
-#from Config_perturb import netCDF_file_Name
 import os
 import math
 import configparser
@@ -23,8 +21,13 @@ def square(x):
 
 
 
-#list in datafrmae stored as string , needs conversion
 def stringToList(string):
+    '''
+        Function : list in datafrmae stored as string , needs conversion to list of numbers
+        Input : list as string eg "[12,1013]"
+        output : list of intergers number
+    
+    '''
     # input format : "[42, 42, 42]" , note the spaces after the commas, in this case I have a list of integers
     string = string[1:len(string)-1]
     try:
@@ -37,15 +40,7 @@ def stringToList(string):
         newList = [-9999]
     return(newList)
     
-
-def read_config():    
-    config = configparser.ConfigParser()
-    config.read('Config_perturb.ini')
-    #print(config.get(['common']['path_to_m2l_files'])) 
-    count = 0
-    for section_name in config.sections():
-        if 'Parameter' in section_name:
-            count  =  count + 1
+    
     
 
 
@@ -54,6 +49,11 @@ ori_strati_grp_type ,ori_fault_grp_type,global_intf_contact_grp_type,global_intf
 global_ori_fault_grp_type,local_bool_intf_contact_grp_type,local_bool_intf_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_grp_type,\
 intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault_eventid,distribution,loc_distribution,error_gps,kappa,perturb):
 
+    '''
+        Function : function perturb interface data for number of models 
+        Input : inputs are huge with integers boolean list of unique ID's,path to netcdf input file , path to output models
+        output : interface pertubation to te number of models
+    '''
     
     path_to_perturb_models = path_to_perturb_models. replace(',', '').replace('\'', '')
     params_file = open(path_to_perturb_models +  "interface_MCpara_before_per.csv", "w")
@@ -70,7 +70,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
     params_file.close()
 
      
-    
+    # .ini file stores all data in dataframe as string  convert it to required format.
     egen_runs = egen_runs.replace(',', '').replace('\'', '')
     path_to_m2l_files = path_to_m2l_files.replace(',', '').replace('\'', '')
     netcdf_file_name = netcdf_file_name.replace(',', '').replace('\'', '')
@@ -87,7 +87,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
     local_bool_intf_fault_grp_type = str(local_bool_intf_fault_grp_type).replace(',', '').replace('\'', '')
 
     
-
+    # flags are stored as string , use them same way 
     if global_intf_contact_grp_type == 'True' :
         global_intf_fault_grp_type = False
         local_bool_intf_contact_grp_type = False
@@ -115,7 +115,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
         intf_contact_layerid = []
         intf_faultobservations_eventid = stringToList(intf_faultobservations_eventid)
 
-
+    #Store the perturbed outfile in the corresponding folder with path.
     path_interface = path_to_perturb_models +  'Interface' 
    
     if (intf_contact_grp_type =='contacts'):
@@ -184,7 +184,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
     else:
         dist_func = ss.uniform.rvs
 
-
+    ''' generate random numbers for distribution each time '''
     random.seed(time.time())
 
     # DEM = # import DEM here for sample new elevations for surface elevations. ISSUE: Don't want to resample elevations for interfaces at depth. Depth constraints needs to be flagged as such?
@@ -215,7 +215,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
                 new_coords.posOnly=df.posOnly.astype(str)
       
         if dem is True:
-            if (local_bool_Intf_contact_grp_type == 'True'   and len(intf_contact_layerid) > 0 ) :  #local conact interface  ,intf_faultObservations_eventId,
+            if (local_bool_Intf_contact_grp_type == 'True'   and len(intf_contact_layerid) > 0 ) :  #local conact interface  ,intf_faultObservations_eventId, for local or specified eventid perturbation
                 for r in range(len(resp['value'])):
                     for ele in intf_contact_layerId :
                         if df._get_value(r,'layerId') == ele :
@@ -232,7 +232,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
                     file_name = 'local_intf_contact_grp_type' + "_" + str(m) + ".csv"
                     new_coords.to_csv(output_location + '/' + file_name, index=False)  
 
-            elif (local_bool_intf_fault_grp_type == 'True'  and len(intf_faultobservations_eventid) > 0 ) :  #local fault interface
+            elif (local_bool_intf_fault_grp_type == 'True'  and len(intf_faultobservations_eventid) > 0 ) :  #local fault interface perturbation
                 for r in range(len(resp['value'])):
                     for ele in intf_faultObservations_eventId :
                         if df._get_value(r,'eventId') == ele :
@@ -250,7 +250,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
                     file_name = 'local_intf_fault_grp_type' + "_" + str(m) + ".csv"
                     new_coords.to_csv(output_location + '/' + file_name, index=False)  
                 
-            else: # global , contact, fault
+            else: # global , contact, fault perturbation
                 for r in range(len(resp['value'])):
                     start_x =  df._get_value(r,'easting')
                     new_coords.loc[r, 'easting'] = dist_func(size=1, loc=start_x - (error_gps), scale=error_gps)  # value error
@@ -264,7 +264,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
 
                 
         else:
-            if (local_bool_intf_contact_grp_type == 'True'     and len(intf_contact_layerid) > 0 ) :  #local conact interface  ,intf_faultObservations_eventId,
+            if (local_bool_intf_contact_grp_type == 'True'     and len(intf_contact_layerid) > 0 ) :  #local conact interface perturbation ,intf_faultObservations_eventId,
                 for r in range(len(resp['value'])):
                     for ele in intf_contact_layerid :
                         if df._get_value(r,'layerId') == ele :
@@ -279,7 +279,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
                     new_coords.to_csv(output_location + '/'  +  file_name, index=False)  
 
 
-            elif (local_bool_intf_fault_grp_type == 'True'    and len(intf_faultobservations_eventid) > 0 ) :  #local fault interface
+            elif (local_bool_intf_fault_grp_type == 'True'    and len(intf_faultobservations_eventid) > 0 ) :  #local fault interface perturbation
                 for r in range(len(resp['value'])):
                     for ele in intf_faultobservations_eventid :
                         if df._get_value(r,'eventId') == ele :
@@ -293,7 +293,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
                     file_name = 'local_intf_fault_grp_type' + "_" + str(m) + ".csv"
                     new_coords.to_csv(output_location + '/' + file_name, index=False) 
 
-            elif global_intf_fault_grp_type == 'True'   or global_intf_contact_grp_type == 'True'  :# global 
+            elif global_intf_fault_grp_type == 'True'   or global_intf_contact_grp_type == 'True'  :# global fault and interface perturbation.
                 for r in range(len(resp['value'])):
                     start_x =  df._get_value(r,'easting')
                     new_coords.loc[r, 'easting'] = dist_func(size=1, loc=start_x - (error_gps), scale=error_gps)  # value error
@@ -320,13 +320,14 @@ def orient_perturb(path_to_m2l_files,path_to_perturb_models,netcdf_file_name,ege
 ori_strati_grp_type ,ori_fault_grp_type,global_intf_contact_grp_type,global_intf_fault_grp_type,global_ori_strati_grp_type,\
 global_ori_fault_grp_type,local_bool_intf_contact_grp_type,local_bool_intf_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_grp_type,\
 intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault_eventid,distribution,loc_distribution,error_gps,kappa,perturb):
-    # samples is the number of draws, thus the number of models in the ensemble
-    # kappa is the assumed error in the orientation, and is roughly the inverse to the width of the distribution
-    # i.e. higher numbers = tighter distribution
-    # write out parameters for record
-    # output_location = './output'
-    
-    
+     
+    '''
+        Function : function perturb orienation data for number of models 
+        Input : inputs are huge with integers boolean list of unique ID's,path to netcdf input file , path to output models,samples is the number of draws, thus the number of models in the ensemble
+                kappa is the assumed error in the orientation, and is roughly the inverse to the width of the distribution
+                i.e. higher numbers = tighter distribution
+        output : orienation pertubation to te number of models 
+    '''
     path_to_perturb_models = path_to_perturb_models. replace(',', '').replace('\'', '')
     params_file = open(path_to_perturb_models +  "orient_MCpara_before_per.csv", "w")
     params_file.write("samples," + str(egen_runs) + "\n")
@@ -340,7 +341,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
     params_file.write("DEM," + str(dem) + "\n")
     params_file.close()
 
-
+     # .ini file stores all data in dataframe as string  convert it to required format.
     egen_runs = egen_runs.replace(',', '').replace('\'', '')
     path_to_m2l_files = path_to_m2l_files.replace(',', '').replace('\'', '')
     netcdf_file_name = netcdf_file_name.replace(',', '').replace('\'', '')
@@ -358,7 +359,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
 
     kappa = str(kappa).replace(',', '').replace('\'', '')
     
-
+    # flags are stored as string , use them same way 
     if global_ori_strati_grp_type == 'True' :
         global_ori_fault_grp_type = False
         local_bool_ori_strati_grp_type = False
@@ -388,7 +389,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
         ori_fault_eventid = stringToList(ori_fault_eventid)
     
     
-    
+    #Store the perturbed outfile in the corresponding folder with path.
     path_Orientation = path_to_perturb_models +  'Orienation' 
     
     
@@ -457,7 +458,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
         dist_func = ss.uniform.rvs
 
 
-
+    ''' generate random numbers for distribution each time '''
     random.seed(time.time())
 
 
@@ -487,7 +488,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
                 new_coords.posOnly=df.posOnly.astype(str)
                         
             
-        if (local_bool_ori_strati_grp_type == 'True'  and len(ori_strati_layerid) > 0 ) :  #local conact interface  ,intf_faultObservations_eventId,
+        if (local_bool_ori_strati_grp_type == 'True'  and len(ori_strati_layerid) > 0 ) :  #local  orienation for x,y,z using ,ori_strati_layerid 
             for r in range(len(resp['value'])):
                 for ele in ori_strati_layerid :
                     if df._get_value(r,'layerId') == ele :
@@ -511,7 +512,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
 
 
             
-        elif (local_bool_ori_fault_grp_type == 'True'  and len(ori_fault_eventid) > 0 ) :  #local conact interface  ,intf_faultObservations_eventId,
+        elif (local_bool_ori_fault_grp_type == 'True'  and len(ori_fault_eventid) > 0 ) :  #local  orienation x,y,z using ,ori_fault_eventid
             for r in range(len(resp['value'])):
                 for ele in ori_fault_eventid :
                     if df._get_value(r,'eventId') == ele :
@@ -534,7 +535,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
                 new_coords.to_csv(output_location + '/'  +  file_name, index=False)
             
 
-        elif global_ori_strati_grp_type == 'True' or global_ori_fault_grp_type == 'True' :
+        elif global_ori_strati_grp_type == 'True' or global_ori_fault_grp_type == 'True' : #global  orienation  using , which pertubes all data.
             
             for r in range(len(resp['value'])):
                 start_x =  df._get_value(r,'easting')
@@ -562,7 +563,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
 
 
     if ori_fault_grp_type == 'faultobservations':
-        if  local_bool_ori_fault_grp_type == 'True':
+        if  local_bool_ori_fault_grp_type == 'True':   # local perturbation of  dip and dipderection for fault using ori_fault_eventid.
             for s in range(int(egen_runs)):
                 new_ori = []
                 new_orient = pd.DataFrame(columns=['eventId', 'easting', 'northing', 'altitude', 'type', 'dipDir', 'dip', 'dipPolarity', 'val', 'displacement', 'posOnly'])  # uniforminput_file[["X", "Y", "Z", "azimuth", "dip", "DipPolarity", "formation"]]
@@ -589,7 +590,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
 
     
     if  ori_strati_grp_type == 'stratigraphicobservations':
-        if local_bool_ori_strati_grp_type == 'True' :
+        if local_bool_ori_strati_grp_type == 'True' : # local perturbation of  dip and dipderection for startigraphy using ori_strati_layerid.
             for s in range(int(egen_runs)):
                 new_ori = []   
                 new_orient = pd.DataFrame(columns=['layerId', 'easting','northing','altitude','type','dipDir','dip','dipPolarity','layer'])  # uniforminput_file[["X", "Y", "Z", "azimuth", "dip", "DipPolarity", "formation"]]
@@ -619,7 +620,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
 
 
     if ori_fault_grp_type == 'faultobservations':
-        if global_ori_fault_grp_type == 'True':
+        if global_ori_fault_grp_type == 'True':  # global perturbation of  dip and dipdirection for fault .
             for s in range(int(egen_runs)):
                 new_ori = []
                 new_orient = pd.DataFrame(numpy.zeros((len(resp['value']), 11)), columns=['eventId', 'easting', 'northing', 'altitude', 'type', 'dipDir', 'dip', 'dipPolarity', 'val', 'displacement', 'posOnly'])  # uniform
@@ -645,7 +646,7 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
 
 
     if  ori_strati_grp_type == 'stratigraphicobservations':
-        if global_ori_strati_grp_type == 'True':
+        if global_ori_strati_grp_type == 'True':  # global perturbation of  dip and dipdirection for startigrapy .
            for s in range(int(egen_runs)):
                 new_ori = []
                 new_orient = pd.DataFrame(numpy.zeros((len(resp['value']), 9)), columns=['layerId', 'easting','northing','altitude','type','dipDir','dip','dipPolarity','layer'])  # uniform
