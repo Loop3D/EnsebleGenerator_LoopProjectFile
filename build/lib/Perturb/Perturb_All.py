@@ -45,13 +45,23 @@ def stringToList(string):
 
 
 def interface_perturb(path_to_m2l_files,path_to_perturb_models,netcdf_file_name,egen_runs,dem,source_geomodeller,intf_contact_grp_type,intf_fault_grp_type,\
-ori_strati_grp_type ,ori_fault_grp_type,global_intf_contact_grp_type,global_intf_fault_grp_type,global_ori_strati_grp_type,\
-global_ori_fault_grp_type,local_bool_intf_contact_grp_type,local_bool_intf_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_grp_type,\
-intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault_eventid,distribution,loc_distribution,error_gps,kappa,perturb):
+global_intf_contact_grp_type,global_intf_fault_grp_type,local_bool_intf_contact_grp_type,local_bool_intf_fault_grp_type,intf_contact_layerid,intf_faultobservations_eventid,distribution,error_gps,perturb):
+
 
     '''
         Function : function perturb interface data for number of models 
-        Input : inputs are huge with integers boolean list of unique ID's,path to netcdf input file , path to output models
+        Input : 
+            path_to_m2l_files : string type path to maploop file 
+            path_to_perturb_models:string type path to perturbed model files. 
+            netcdf_file_name: string type path to netcdf file. 
+            egen_runs: integer number of models.
+            dem: boolean dem value.
+            source_geomodeller: boolean type.
+            intf_contact_grp_type,intf_fault_grp_type,global_intf_contact_grp_type,global_intf_fault_grp_type,local_bool_intf_contact_grp_type,local_bool_intf_fault_grp_type: boolean flags for interface group type.
+            intf_contact_layerid,intf_faultobservations_eventid: list of unique value for local perturbation.
+            distribution: string type to specify distribution.
+            error_gps:integer error value.
+            perturb:string type for perturbation.
         output : interface pertubation to te number of models
     '''
     
@@ -316,16 +326,23 @@ intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault
 
 
 
-def orient_perturb(path_to_m2l_files,path_to_perturb_models,netcdf_file_name,egen_runs,dem,source_geomodeller,intf_contact_grp_type,intf_fault_grp_type,\
-ori_strati_grp_type ,ori_fault_grp_type,global_intf_contact_grp_type,global_intf_fault_grp_type,global_ori_strati_grp_type,\
-global_ori_fault_grp_type,local_bool_intf_contact_grp_type,local_bool_intf_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_grp_type,\
-intf_contact_layerid,intf_faultobservations_eventid,ori_strati_layerid,ori_fault_eventid,distribution,loc_distribution,error_gps,kappa,perturb):
+def orient_perturb(path_to_m2l_files,path_to_perturb_models,netcdf_file_name,egen_runs,dem,source_geomodeller,ori_strati_grp_type ,ori_fault_grp_type,global_ori_strati_grp_type,\
+global_ori_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_grp_type,ori_strati_layerid,ori_fault_eventid,distribution,loc_distribution,error_gps,kappa,perturb):
+
      
     '''
         Function : function perturb orienation data for number of models 
-        Input : inputs are huge with integers boolean list of unique ID's,path to netcdf input file , path to output models,samples is the number of draws, thus the number of models in the ensemble
-                kappa is the assumed error in the orientation, and is roughly the inverse to the width of the distribution
-                i.e. higher numbers = tighter distribution
+        Input : path_to_m2l_files : string type path to maploop file 
+            path_to_perturb_models:string type path to perturbed model files. 
+            netcdf_file_name: string type path to netcdf file. 
+            egen_runs: integer number of models.
+            dem: boolean dem value.
+            source_geomodeller: boolean type.
+            ori_strati_grp_type ,ori_fault_grp_type,global_ori_strati_grp_type,global_ori_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_grp_type: boolean flags for orienation group type.
+            intf_contact_layerid,intf_faultobservations_eventid: list of unique value for local perturbation.
+            distribution: string type to specify distribution.
+            error_gps:integer error value.
+            perturb:string type for perturbation
         output : orienation pertubation to te number of models 
     '''
     path_to_perturb_models = path_to_perturb_models. replace(',', '').replace('\'', '')
