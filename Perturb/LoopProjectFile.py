@@ -2,11 +2,11 @@
 """
 
 This module provides accessor functions to a Loop Project file as defined in
-<url pending>.  
+<url pending>.
 
 Examples
 --------
-The main accessor functions are LoopProjectFile.Get and LoopProjectFile.Set 
+The main accessor functions are LoopProjectFile.Get and LoopProjectFile.Set
 which are used as below:
     >>> import LoopProjectFile
     >>> response = LoopProjectFile.Get(`filename`,`element`)
@@ -25,7 +25,7 @@ where:
 Returns
 -------
 The structure of each Get or Set function is a dict with "errorFlag" which
-indicates a failure (on True) to get/set and then "errorString" in the case ofpip
+indicates a failure (on True) to get/set and then "errorString" in the case of
 a failure or "value" in the case of a successful get call.
 
 """
@@ -33,17 +33,32 @@ import numpy
 import pandas
 import sys
 import os
+import enum
 
 import netCDF4
-#from netCDF4 import Dataset
-#import LoopProjectFile.Version as Version
-import Perturb.Version
+import Perturb.Version 
 import Perturb.Extents 
 import Perturb.StructuralModels 
 import Perturb.DataCollection as DC
-import Perturb.ExtractedInformation 
+import Perturb.ExtractedInformation as EI
 import Perturb.GeophysicalModels 
 import Perturb.ProbabilityModels 
+
+class EventType(enum.IntEnum):
+    INVALIDEVENT= -1,
+    FAULTEVENT = 0,
+    FOLDEVENT = 1,
+    FOLIATIONSEVENT = 2,
+    DISCONTINUITYEVENT = 3,
+    STRATIGRAPHICLAYER = 4
+
+class EventRelationshipType(enum.IntEnum):
+    INVALIDTYPE = -1
+    STRATA_STRATA = 0
+    FAULT_STRATA = 1
+    FAULT_FAULT_SPLAY = 2
+    FAULT_FAULT_ABUT = 3
+    FAULT_FAULT_OVERPRINT = 4
 
 ####  External Accessors ####
 
@@ -52,18 +67,18 @@ def CreateBasic(filename):
     """
     **CreateBasic** - Creates a basic Loop Project File without extents or data
     (will not overright existing files)
-    
+
     Parameters
     ----------
     filename: string
         The name of the file to create
-    
+
     Returns
     -------
     dict {"errorFlag","errorString"}
         errorString exist and contains error message only when errorFlag is
         True
-        
+
     """
     if os.path.isfile(filename):
         errStr = "File " + filename + " already exists"
@@ -72,8 +87,8 @@ def CreateBasic(filename):
     else:
         rootGroup = netCDF4.Dataset(filename,"w",format="NETCDF4")
         response = Version.SetVersion(rootGroup, version=Version.LoopVersion())
-        if not response['errorFlag']: response = DataCollection.SetDefaultSources(rootGroup)
-        if not response['errorFlag']: response = DataCollection.SetDefaultConfiguration(rootGroup)
+        if not response['errorFlag']: response = DC.SetDefaultSources(rootGroup)
+        if not response['errorFlag']: response = DC.SetDefaultConfiguration(rootGroup)
         if not response['errorFlag']: response = StructuralModels.SetDefaultConfiguration(rootGroup)
         rootGroup.close()
     return response
@@ -83,7 +98,7 @@ def OpenProjectFile(filename, readOnly=True, verbose=True):
     """
     **OpenProjectFile** - Open a Loop Project File and checks it exists and is a
     netCDF formatted file
-    
+
     Parameters
     ----------
     filename: string
@@ -91,13 +106,13 @@ def OpenProjectFile(filename, readOnly=True, verbose=True):
     readOnly: bool
         Whether to open the file without data entry or not (True - read only,
         False - writable)
-    
+
     Returns
     -------
     dict {"errorFlag","errorString"}
         errorString exist and contains error message only when errorFlag is
-        True    
-    
+        True
+
     """
     if verbose: print("Accessing file named: " + filename)
     if not os.path.isfile(filename):
@@ -109,7 +124,7 @@ def OpenProjectFile(filename, readOnly=True, verbose=True):
     if not rootgrp:
         errStr = "(ERROR) File was not a Loop Project File"
         print(errStr)
-        return {"errorFlag":True,"errorString":errStr}    
+        return {"errorFlag":True,"errorString":errStr}
     if verbose: print("NetCDF data model type: " + rootgrp.data_model)
     return {"errorFlag":False,"root":rootgrp}
 
@@ -138,7 +153,7 @@ def Set(filename, element, **kwargs):
                         formation,                      = the formation (string) (Hammerley,...)
                         layer)                          = the layer to associate with (string)("S0","F1",...)
                       "verbose" = optional extra console logging
-    
+
     Examples
     --------
     For setting version number:
@@ -146,13 +161,13 @@ def Set(filename, element, **kwargs):
       or
     >>> resp = LoopProjectFile.Set("test.loop3d","version",version=[1,0,0])
     >>> if resp["errorFlag"]: print(resp["errorString"])
-    
+
     For saving data:
     >>> LoopProjectFile.Set("test.loop3d","strModel",data=dataset,index=0,verbose=True)
       or
     >>> resp = LoopProjectFile.Set("test.loop3d","strModel",data=dataset,index=0,verbose=True)
     >>> if resp["errorFlag"]: print(resp["errorString"])
-    
+
     For saving extents (in the middle of the pacific ocean):
     >>> LoopProjectFile.Set("test.loop3d","extents",geodesic=[0,1,-180,-179], \
         utm=[1,1,10000000,9889363.77,833966.132,722587.169], depth=[-1000,-2000] \
@@ -162,8 +177,8 @@ def Set(filename, element, **kwargs):
     >>> data = ((easting,northing,altitude),dipdir,dip,polarity,formation,layer) * X rows
     >>> resp = LoopProjectFile.Set("test.loop3d","observations",data=data,append=False,verbose=True)
     >>> if resp["errorFlag"]: print resp["errorString"])
-    
-    
+
+
     Parameters
     ----------
     filename: string
@@ -172,13 +187,13 @@ def Set(filename, element, **kwargs):
         The name of the element to save
     kwargs: dict
         A dictionary contains the elements to save
-        
+
     Returns
     -------
     dict {"errorFlag","errorString"}
         errorString exist and contains error message only when errorFlag is
         True
-    
+
     """
     fileResp = OpenProjectFile(filename, readOnly=False, verbose=False)
     if fileResp["errorFlag"]: response = fileResp
@@ -187,18 +202,24 @@ def Set(filename, element, **kwargs):
         if element == "version": response = Version.SetVersion(root, **kwargs)
         elif element == "extents": response = Extents.SetExtents(root, **kwargs)
         elif element == "strModel": response = StructuralModels.SetStructuralModel(root, **kwargs)
-        elif element == "faultObservations": response = DataCollection.SetFaultObservations(root, **kwargs)
-        elif element == "faultObservationsAppend": response = DataCollection.SetFaultObservations(root, append=True, **kwargs)
-        elif element == "foldObservations": response = DataCollection.SetFoldObservations(root, **kwargs)
-        elif element == "foldObservationsAppend": response = DataCollection.SetFoldObservations(root, append=True, **kwargs)
-        elif element == "foliationObservations": response = DataCollection.SetFoliationObservations(root, **kwargs)
-        elif element == "foliationObservationsAppend": response = DataCollection.SetFoliationObservations(root, append=True, **kwargs)
-        elif element == "discontinuityObservations": response = DataCollection.SetDiscontinuityObservations(root, **kwargs)
-        elif element == "discontinuityObservationsAppend": response = DataCollection.SetDiscontinuityObservations(root, append=True, **kwargs)
-        elif element == "stratigraphicObservations": response = DataCollection.SetStratigraphicObservations(root, **kwargs)
-        elif element == "stratigraphicObservationsAppend": response = DataCollection.SetStratigraphicObservations(root, append=True, **kwargs)
-        elif element == "contacts": response = DataCollection.SetContacts(root, **kwargs)
-        elif element == "contactsAppend": response = DataCollection.SetContacts(root, append=True, **kwargs)
+        elif element == "faultObservations": response = DC.SetFaultObservations(root, **kwargs)
+        elif element == "faultObservationsAppend": response = DC.SetFaultObservations(root, append=True, **kwargs)
+        elif element == "foldObservations": response = DC.SetFoldObservations(root, **kwargs)
+        elif element == "foldObservationsAppend": response = DC.SetFoldObservations(root, append=True, **kwargs)
+        elif element == "foliationObservations": response = DC.SetFoliationObservations(root, **kwargs)
+        elif element == "foliationObservationsAppend": response = DC.SetFoliationObservations(root, append=True, **kwargs)
+        elif element == "discontinuityObservations": response = DC.SetDiscontinuityObservations(root, **kwargs)
+        elif element == "discontinuityObservationsAppend": response = DC.SetDiscontinuityObservations(root, append=True, **kwargs)
+        elif element == "stratigraphicObservations": response = DC.SetStratigraphicObservations(root, **kwargs)
+        elif element == "stratigraphicObservationsAppend": response = DC.SetStratigraphicObservations(root, append=True, **kwargs)
+        elif element == "contacts": response = DC.SetContacts(root, **kwargs)
+        elif element == "contactsAppend": response = DC.SetContacts(root, append=True, **kwargs)
+        elif element == "drillholeObservations": response = DC.SetDrillholeObservations(root, **kwargs)
+        elif element == "drillholeObservationsAppend": response = DC.SetDrillholeObservations(root, append=True, **kwargs)
+        elif element == "drillholeSurveys": response = DC.SetDrillholeSurveys(root, **kwargs)
+        elif element == "drillholeSurveysAppend": response = DC.SetDrillholeSurveys(root, append=True, **kwargs)
+        elif element == "drillholeProperties": response = DC.SetDrillholeProperties(root, **kwargs)
+        elif element == "drillholePropertiesAppend": response = DC.SetDrillholeProperties(root, append=True, **kwargs)
         elif element == "stratigraphicLog": response = ExtractedInformation.SetStratigraphicLog(root, **kwargs)
         elif element == "stratigraphicLogAppend": response = ExtractedInformation.SetStratigraphicLog(root, append=True, **kwargs)
         elif element == "faultLog": response = ExtractedInformation.SetFaultLog(root, **kwargs)
@@ -209,6 +230,8 @@ def Set(filename, element, **kwargs):
         elif element == "foliationLogAppend": response = ExtractedInformation.SetFoliationLog(root, append=True, **kwargs)
         elif element == "discontinuityLog": response = ExtractedInformation.SetDiscontinuityLog(root, **kwargs)
         elif element == "discontinuityLogAppend": response = ExtractedInformation.SetDiscontinuityLog(root, append=True, **kwargs)
+        elif element == "drillholeLog": response = ExtractedInformation.SetDrillholeLog(root, **kwargs)
+        elif element == "drillholeLogAppend": response = ExtractedInformation.SetDrillholeLog(root, append=True, **kwargs)
         elif element == "dataCollectionConfig": response = DataCollection.SetConfiguration(root, **kwargs)
         elif element == "dataCollectionSources": response = DataCollection.SetSources(root, **kwargs)
         elif element == "eventRelationships": response = ExtractedInformation.SetEventRelationships(root, **kwargs)
@@ -233,19 +256,19 @@ def Get(filename, element, **kwargs):
                       "spacing" = [N/SSpacing,E/WSpacing,DepthSpacing]
                       "preference" = "utm" or "geodesic" (optional)}
         strModel    : "value" = the 3D scalar field of structural data
-    
+
     Examples
     --------
     For extracting the version number:
     >>> resp = LoopProjectFile.Get("test.loop3d","version")
     >>> if resp["errorFlag"]: print(resp["errorString"])
     >>> else: version = resp["value"]
-    
+
     For extracting structural model data:
     >>> resp = LoopProjectFile.Set("test.loop3d","strModel",data=dataset,index=0)
     >>> if resp["errorFlag"]: print(resp["errorString"])
     >>> else: data = resp["value"]
-    
+
     For extracting the extents:
     >>> resp = LoopProjectFile.Get("test.loop3d","extents")
     >>> if resp["errorFlag"]: print(resp["errorString"])
@@ -255,7 +278,7 @@ def Get(filename, element, **kwargs):
     >>>     utm = data["utm"]
     >>>     depth = data["depth"]
     >>>     spacing = data["spacing"]
-    
+
     Parameters
     ----------
     filename: string
@@ -263,15 +286,15 @@ def Get(filename, element, **kwargs):
     element: string
         The name of the element to extract
     kwargs: dict
-        A dictionary contains the optional get values such as index of 
+        A dictionary contains the optional get values such as index of
         a structural model to extract
-        
+
     Returns
     -------
     dict {"errorFlag","errorString"/"value"}
         errorString exist and contains error message only when errorFlag is
         True otherwise the extracted value is in the "value" keyword
-    
+
     """
 
     fileResp = OpenProjectFile(filename, readOnly=True, verbose=False)
@@ -282,18 +305,22 @@ def Get(filename, element, **kwargs):
         elif element == "extents": response = Extents.GetExtents(root)
         elif element == "strModel": response = StructuralModels.GetStructuralModel(root,**kwargs)
         elif element == "faultObservations": response = DC.GetFaultObservations(root,**kwargs)
-        elif element == "foldObservations": response = DataCollection.GetFoldObservations(root,**kwargs)
-        elif element == "foliationObservations": response = DataCollection.GetFoliationObservations(root,**kwargs)
-        elif element == "discontinuityObservations": response = DataCollection.GetDiscontinuityObservations(root,**kwargs)
+        elif element == "foldObservations": response = DC.GetFoldObservations(root,**kwargs)
+        elif element == "foliationObservations": response = DC.GetFoliationObservations(root,**kwargs)
+        elif element == "discontinuityObservations": response = DC.GetDiscontinuityObservations(root,**kwargs)
         elif element == "stratigraphicObservations": response = DC.GetStratigraphicObservations(root,**kwargs)
         elif element == "contacts": response = DC.GetContacts(root,**kwargs)
+        elif element == "drillholeObservations": response = DC.GetDrillholeObservations(root,**kwargs)
+        elif element == "drillholeSurveys": response = DC.GetDrillholeSurveys(root,**kwargs)
+        elif element == "drillholeProperties": response = DC.GetDrillholeProperties(root,**kwargs)
         elif element == "stratigraphicLog": response = ExtractedInformation.GetStratigraphicLog(root,**kwargs)
         elif element == "faultLog": response = ExtractedInformation.GetFaultLog(root,**kwargs)
         elif element == "foldLog": response = ExtractedInformation.GetFoldLog(root,**kwargs)
         elif element == "foliationLog": response = ExtractedInformation.GetFoliationLog(root,**kwargs)
         elif element == "discontinuityLog": response = ExtractedInformation.GetDiscontinuityLog(root,**kwargs)
-        elif element == "dataCollectionConfig": response = DataCollection.GetConfiguration(root, **kwargs)
-        elif element == "dataCollectionSources": response = DataCollection.GetSources(root, **kwargs)
+        elif element == "drillholeLog": response = EI.GetDrillholeLog(root,**kwargs)
+        elif element == "dataCollectionConfig": response = DC.GetConfiguration(root, **kwargs)
+        elif element == "dataCollectionSources": response = DC.GetSources(root, **kwargs)
         elif element == "eventRelationships": response = ExtractedInformation.GetEventRelationships(root, **kwargs)
         elif element == "structuralModelsConfig": response = StructuralModels.GetConfiguration(root, **kwargs)
         else:
@@ -306,11 +333,11 @@ def Get(filename, element, **kwargs):
 # Check full project structure
 def CheckFileValid(filename, verbose=False):
     """
-    **CheckFileValid** - A function to check through a Loop Project File to 
+    **CheckFileValid** - A function to check through a Loop Project File to
     ensure that it is versioned, the extents are valid, and any data structures
-    match the shape that the extents specify (comments on the structure are 
+    match the shape that the extents specify (comments on the structure are
     output to console when in verbose mode)
-    
+
     Parameters
     ----------
     filename: string
@@ -322,7 +349,7 @@ def CheckFileValid(filename, verbose=False):
     -------
     bool
         A flag indicating whether the Loop Project File is valid
-    
+
     """
     valid = True
     # Open project file
@@ -331,7 +358,7 @@ def CheckFileValid(filename, verbose=False):
     else:
         rootgrp = fileResp["root"]
 
-        xyzGridSize = [0,0,0]
+        xyzGridSize = [0,0,0];
         # Check for errors in project file
         valid = Version.CheckVersionValid(rootgrp, verbose) and valid
         valid = Extents.CheckExtentsValid(rootgrp, xyzGridSize, verbose) and valid
@@ -340,11 +367,11 @@ def CheckFileValid(filename, verbose=False):
         valid = StructuralModels.CheckStructuralModelsValid(rootgrp,xyzGridSize, verbose) and valid
         valid = GeophysicalModels.CheckGeophysicalModelsValid(rootgrp, verbose) and valid
         valid = ProbabilityModels.CheckProbabilityModelValid(rootgrp, verbose) and valid
-        
+
         # Close and report
         rootgrp.close()
 
-        if valid:
+        if valid and verbose == True:
             print("\nThis is a valid Loop Project File")
         else:
             print("\nThis Loop Project File is NOT valid")
@@ -378,7 +405,7 @@ stratigraphicObservationType = numpy.dtype([('layerId','<u4'),
                         ('layer','S30')])
 
 faultEventType = numpy.dtype([('eventId','<u4'),
-                        ('minAge','<f8'),('maxAge','<f8'),('name','S30'),('supergroup','S30'),
+                        ('minAge','<f8'),('maxAge','<f8'),('name','S30'),('group','S30'),('supergroup','S30'),
                         ('enabled','u1'),('rank','<u4'),('type','<i4'),
                         ('avgDisplacement','<f8'),('avgDownthrowDir','<f8'),
                         ('influenceDistance','<f8'),('verticalRadius','<f8'),
@@ -388,35 +415,68 @@ faultEventType = numpy.dtype([('eventId','<u4'),
                         ('avgNormalEasting','<f8'),('avgNormalNorthing','<f8'),('avgNormalAltitude','<f8')])
 
 foldEventType = numpy.dtype([('eventId','<u4'),
-                        ('minAge','<f8'),('maxAge','<f8'),('name','S30'),('supergroup','S30'),
+                        ('minAge','<f8'),('maxAge','<f8'),('name','S30'),('group','S30'),('supergroup','S30'),
                         ('enabled','u1'),('rank','<u4'),('type','<i4'),
                         ('periodic','u1'),('wavelength','<f8'),('amplitude','<f8'),
                         ('asymmetry','u1'),('asymmetryShift','<f8'),
                         ('secondaryWavelength','<f8'),('secondaryAmplitude','<f8')])
 
 foliationEventType = numpy.dtype([('eventId','<u4'),
-                        ('minAge','<f8'),('maxAge','<f8'),('name','S30'),('supergroup','S30'),
+                        ('minAge','<f8'),('maxAge','<f8'),('name','S30'),('group','S30'),('supergroup','S30'),
                         ('enabled','u1'),('rank','<u4'),('type','<i4'),
                         ('lowerScalarValue','<f8'),('upperScalarValue','<f8')])
 
 discontinuityEventType = numpy.dtype([('eventId','<u4'),
-                        ('minAge','<f8'),('maxAge','<f8'),('name','S30'),('supergroup','S30'),
+                        ('minAge','<f8'),('maxAge','<f8'),('name','S30'),('group','S30'),('supergroup','S30'),
                         ('enabled','u1'),('rank','<u4'),('type','<i4'),
                         ('scalarValue','<f8')])
 
 stratigraphicLayerType = numpy.dtype([('layerId','<u4'),
-                        ('minAge','<f8'),('maxAge','<f8'),('name','S30'),('supergroup','S30'),
+                        ('minAge','<f8'),('maxAge','<f8'),('name','S30'),('group','S30'),('supergroup','S30'),
                         ('enabled','u1'),('rank','<u4'),('type','<i4'),
-                        ('thickness','f8'),
+                        ('thickness','<f8'),
                         ('colour1Red','u1'),('colour1Green','u1'),('colour1Blue','u1'),
                         ('colour2Red','u1'),('colour2Green','u1'),('colour2Blue','u1')])
-eventRelationshipType = numpy.dtype([('eventId1','<u4'),('eventId2','<u4'),('bidirectional','u1')])
+
+eventRelationshipType = numpy.dtype([('eventId1','<u4'),('eventId2','<u4'),('bidirectional','u1'),
+                        ('angle','<f8'),('type','<i4')])
+
+drillholeDescriptionType = numpy.dtype([('collarId','<u4'),('holeName','S30'),
+                        ('surfaceX','<f8'),('surfaceY','<f8'),('surfaceZ','<f8')])
+
+drillholePropertyType = numpy.dtype([('collarId','<u4'),('propertyName','S30'),('propertyValue','S80')])
+
+drillholeObservationType = numpy.dtype([('collarId','<u4'),
+                        ('fromX','<f8'),('fromY','<f8'),('fromZ','<f8'), ('layerId','<u4'),
+                        ('toX','<f8'),('toY','<f8'),('toZ','<f8'),('from','<f8'),('to','<f8'),
+                        ('propertyCode','S30'),('property1','S30'),('property2','S30'),('unit','S30')])
+
+drillholeSurveyType = numpy.dtype([('collarId','<u4'),('depth','<f8'),
+                        ('angle1','<f8'),('angle2','<f8'),('unit','S30')])
 
 def ConvertDataFrame(df,dtype):
     if isinstance(df,pandas.DataFrame):
         return numpy.array(df.to_records(index=False).tolist(),dtype=dtype)
-    #else:
-        #raise Not ADataFrame
+    else:
+        raise NotADataFrame
 
+def CheckFileIsLoopProjectFile(filename, verbose=False):
+    """
+    Check that the file is a valid Loop Project File
+    """
+    fileResp = OpenProjectFile(filename, readOnly=True, verbose=verbose)
+    if fileResp["errorFlag"]: 
+        valid = False
+        print('Project file is not a LoopProjectFile')
+    else:
+        rootgrp = fileResp["root"]
+        rootgrp.close()
+        valid = True
+    return valid
 
-
+    
+def ConvertToDataFrame(data,loopCompoundType):
+    columns = list(loopCompoundType.names)
+    df = pandas.DataFrame.from_records(data, columns=columns)
+    df = df.applymap(lambda x:x.decode() if isinstance(x,bytes) else x)
+    return df

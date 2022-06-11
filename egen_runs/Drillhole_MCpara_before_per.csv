@@ -1,0 +1,11 @@
+samples,5,
+drillhole_grp_type1,'drillholelog'
+drillhole_grp_type2,'drillholesurveys'
+drillhole_grp_type3,'drillholeobservations'
+distribution,'normal'
+global drillhole  ,True
+lcal drillhole  ,AB
+azimuth error drillhole  ,1.5
+dip error drillhole  ,2.5
+length error drillhole  ,0.5
+DEM,False ,

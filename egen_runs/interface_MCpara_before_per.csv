@@ -1,10 +1,10 @@
 samples,5,
-error_gps,100
-Group_type,'orient'
-distribution,AB
+error_gps,AB
+Group_type,'drillhole'
+distribution,'normal'
 global_intf_contact_grp_type ,AB
 global_intf_fault_grp_type ,AB
 local interface bool val ,AB
 local fault bool val ,AB
-distribution,AB
+distribution,'normal'
 DEM,False ,
