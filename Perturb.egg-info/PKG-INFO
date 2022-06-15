@@ -14,18 +14,11 @@ Requires-Python: >=3.6
 Description-Content-Type: text/markdown
 License-File: LICENSE
 
-# Loop Project File Documentation {#mainpage}
+# *EnsembleGenerator_LoopProjectFile* <br> 
+***EnsembleGenerator_LoopProjectFile*** is a python library that perturbes the input data in LoopProjectFile(netcdf format) from map2l.It provides Functions for generating and analysing ensembles of geological models.Perturbed files are to the number of perturbation specified in .ini file.The output are available in csv and loop3d format.
 
-<!-- TOC seems to break alignment (also note that if TOC is enabled you MUST use level 1 headers) -->
-<!-- [TOC] -->
+**Mark Jessell**(Mark.Jessel@uwa.edu.au) contributed the original idea, The code development is led by **Kavitha Madaiah** (kavitha.madaiah@uwa.edu.au). **Evren Pakyuz-Charrier1** has provided significant inputs from his phd work .**Mark Lindsay** has made significant contributions to code developed using csv files as input.
 
-<!-- I would prefer to have an image linked to the loop project website but Doxygen markdown cannot do this -->
-<!-- In Doxygen 1.8.16 (released 9/8/2019) it might be possible -->
-![Loop Project](loop_inv.png "Loop Project")
-[Loop Project Website](https://loop3d.org)
-
-# What is Loop?
-The Loop platform is an open source 3D probabilistic geological and geophysical modelling platform, initiated by Geoscience Australia and the OneGeology consortium. The project is funded by Australian territory, State and Federal Geological Surveys, the Australian Research Council and the MinEx Collaborative Research Centre.
 
 # What is a Loop Project File?
 A Loop Project File encapsulates all the data and models used or created in a Loop workflow.  This includes the ability to create meta-data which provides provenance of the data and the methodology and history of how models are used and produced.  The Loop Project File is based on netCDF and has APIs for C/C++, Python and Fortran.
@@ -38,8 +31,60 @@ There are several benefits to using a single project file.  These include encaps
 # Why use netCDF?
 netCDF enables multi-dimensional data structure storage in a highly compressed format as well as data attribution for meta-data all within a single data file.
 
-# Licencing
-The Loop Project File python repository is under the MIT license 
+## Ensemble_Generator which uses csv files as input(by mark lindsay):
+https://github.com/Loop3D/ensemble_generator
+
+
+
+## workflow of EnsembleGenerator_LoopProjectFile:
+Source of model and data: map2loop
+1.input files in Netcdf_map2l in the following link.
+	http://localhost:8888/tree/Netcdf_map2l
+2.Perturb_config.ini which has all the inputs required for perturbation in the following 
+	http://localhost:8888/tree/notebook
+3.run the jupyter notebook in the following.
+	http://localhost:8888/tree/notebook
+	http://localhost:8888/notebooks/notebook/Perturb_interface_orientation_drillhole.ipynb
+4.Output file both csv and loop3d formats available in the following link
+	http://localhost:8888/tree/egen_runs
+	
+## Where to start for EnsembleGenerator_LoopProjectFile :
+
+1. Install the dependencies:
+- LoopProjectFile (https://github.com/Loop3D/LoopProjectFile) <br>
+`Add LoopProjectFile code` <br>
+- pandas (https://pandas.pydata.org/)  <br>
+`pip install pandas` or `conda install pandas`<br>
+- numpy (https://github.com/numpy/numpy)  <br>
+`pip install numpy` or `conda install numpy` <br>
+https://github.com/Loop3D/map2loop-2  <br>
+`Add map2loop code` <br>
+- netcdf4 (https://pypi.org/project/netCDF4/)
+`pip install netcdf4` or `conda install netcdf4` <br>
+-- Geopandas (https://pypi.org/project/netCDF4/)
+`conda install geopandas` or `conda install -c conda-forge geopandas`
+
+
+2. Clone the repository: <br>
+`$ git clone https://github.com/Loop3D/EnsebleGenerator_LoopProjectFile.git`
+
+
+3. Install from your local drive <br>
+`cd \local_drive\` <br>
+`python setup.py install --user --force`
+
+
+## More information on the Monte Carlo simulation for uncertainty estimation.
+https://www.researchgate.net/publication/324262019_Monte_Carlo_simulation_for_uncertainty_estimation_on_structural_data_in_implicit_3-D_geological_modeling_a_guide_for_disturbance_distribution_selection_and_parameterization
+
+## Problems
+For any bugs/feature requests/comments, please create a new https://github.com/Loop3D/EnsebleGenerator_LoopProjectFile/issues
+
+
+
+
+
+
 
 
 

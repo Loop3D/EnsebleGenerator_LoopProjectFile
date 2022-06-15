@@ -36,9 +36,9 @@ import os
 import enum
 
 import netCDF4
-import Perturb.Version 
+import Perturb.Version as Ver
 import Perturb.Extents 
-import Perturb.StructuralModels 
+import Perturb.StructuralModels as SM
 import Perturb.DataCollection as DC
 import Perturb.ExtractedInformation as EI
 import Perturb.GeophysicalModels 
@@ -86,10 +86,10 @@ def CreateBasic(filename):
         response = {"errorFlag":True,"errorString":errStr}
     else:
         rootGroup = netCDF4.Dataset(filename,"w",format="NETCDF4")
-        response = Version.SetVersion(rootGroup, version=Version.LoopVersion())
+        response = Ver.SetVersion(rootGroup, version=Ver.LoopVersion())
         if not response['errorFlag']: response = DC.SetDefaultSources(rootGroup)
         if not response['errorFlag']: response = DC.SetDefaultConfiguration(rootGroup)
-        if not response['errorFlag']: response = StructuralModels.SetDefaultConfiguration(rootGroup)
+        if not response['errorFlag']: response = SM.SetDefaultConfiguration(rootGroup)
         rootGroup.close()
     return response
 
@@ -230,7 +230,7 @@ def Set(filename, element, **kwargs):
         elif element == "foliationLogAppend": response = ExtractedInformation.SetFoliationLog(root, append=True, **kwargs)
         elif element == "discontinuityLog": response = ExtractedInformation.SetDiscontinuityLog(root, **kwargs)
         elif element == "discontinuityLogAppend": response = ExtractedInformation.SetDiscontinuityLog(root, append=True, **kwargs)
-        elif element == "drillholeLog": response = ExtractedInformation.SetDrillholeLog(root, **kwargs)
+        elif element == "drillholeLog": response = EI.SetDrillholeLog(root, **kwargs)
         elif element == "drillholeLogAppend": response = ExtractedInformation.SetDrillholeLog(root, append=True, **kwargs)
         elif element == "dataCollectionConfig": response = DataCollection.SetConfiguration(root, **kwargs)
         elif element == "dataCollectionSources": response = DataCollection.SetSources(root, **kwargs)

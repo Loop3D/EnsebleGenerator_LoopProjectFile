@@ -1,6 +1,6 @@
 import netCDF4
 import Perturb.LoopProjectFileUtils as LPFU
-import Perturb.LoopProjectFile
+import Perturb.LoopProjectFile as LF
 
 # Check Data Collection valid if present
 def CheckDataCollectionValid(rootGroup, verbose=False):
@@ -69,15 +69,15 @@ def CreateObservationGroup(dataCollectionGroup):
     obGroup.createDimension("foliationObservationIndex",None)
     obGroup.createDimension("discontinuityObservationIndex",None)
     obGroup.createDimension("stratigraphicObservationIndex",None)
-    faultObservationType_t = obGroup.createCompoundType(LoopProjectFile.faultObservationType,'FaultObservation')
+    faultObservationType_t = obGroup.createCompoundType(LF.faultObservationType,'FaultObservation')
     obGroup.createVariable('faultObservations',faultObservationType_t,('faultObservationIndex'),zlib=True,complevel=9)
-    foldObservationType_t = obGroup.createCompoundType(LoopProjectFile.foldObservationType,'FoldObservation')
+    foldObservationType_t = obGroup.createCompoundType(LF.foldObservationType,'FoldObservation')
     obGroup.createVariable('foldObservations',foldObservationType_t,('foldObservationIndex'),zlib=True,complevel=9)
-    foliationObservationType_t = obGroup.createCompoundType(LoopProjectFile.foliationObservationType,'FoliationObservation')
+    foliationObservationType_t = obGroup.createCompoundType(LF.foliationObservationType,'FoliationObservation')
     obGroup.createVariable('foliationObservations',foliationObservationType_t,('foliationObservationIndex'),zlib=True,complevel=9)
-    discontinuityObservationType_t = obGroup.createCompoundType(LoopProjectFile.discontinuityObservationType,'DiscontinuityObservation')
+    discontinuityObservationType_t = obGroup.createCompoundType(LF.discontinuityObservationType,'DiscontinuityObservation')
     obGroup.createVariable('discontinuityObservations',discontinuityObservationType_t,('discontinuityObservationIndex'),zlib=True,complevel=9)
-    stratigraphicObservationType_t = obGroup.createCompoundType(LoopProjectFile.stratigraphicObservationType,'StratigraphicObservation')
+    stratigraphicObservationType_t = obGroup.createCompoundType(LF.stratigraphicObservationType,'StratigraphicObservation')
     obGroup.createVariable('stratigraphicObservations',stratigraphicObservationType_t,('stratigraphicObservationIndex'),zlib=True,complevel=9)
     return obGroup
 
@@ -86,11 +86,11 @@ def CreateDrillholeGroup(dataCollectionGroup):
     dhGroup.createDimension("drillholeObservationIndex",None)
     dhGroup.createDimension("drillholeSurveyIndex",None)
     dhGroup.createDimension("drillholePropertyIndex",None)
-    drillholeObservationType_t = dhGroup.createCompoundType(LoopProjectFile.drillholeObservationType,'DrillholeObservation')
+    drillholeObservationType_t = dhGroup.createCompoundType(LF.drillholeObservationType,'DrillholeObservation')
     dhGroup.createVariable('drillholeObservations',drillholeObservationType_t,('drillholeObservationIndex'),zlib=True,complevel=9)
-    drillholeSurveyType_t = dhGroup.createCompoundType(LoopProjectFile.drillholeSurveyType,'DrillholeSurvey')
+    drillholeSurveyType_t = dhGroup.createCompoundType(LF.drillholeSurveyType,'DrillholeSurvey')
     dhGroup.createVariable('drillholeSurveys',drillholeSurveyType_t,('drillholeSurveyIndex'),zlib=True,complevel=9)
-    drillholePropertyType_t = dhGroup.createCompoundType(LoopProjectFile.drillholePropertyType,'DrillholeProperty')
+    drillholePropertyType_t = dhGroup.createCompoundType(LF.drillholePropertyType,'DrillholeProperty')
     dhGroup.createVariable('drillholeProperties',drillholePropertyType_t,('drillholePropertyIndex'),zlib=True,complevel=9)
     return dhGroup
 
@@ -313,7 +313,7 @@ def SetContacts(root, data, append=False, verbose=False):
     if resp["errorFlag"]:
         group = dcGroup.createGroup("Contacts")
         group.createDimension("index",None)
-        contactObservationType_t = group.createCompoundType(LoopProjectFile.contactObservationType,'contactObservation')
+        contactObservationType_t = group.createCompoundType(LF.contactObservationType,'contactObservation')
         group.createVariable('contacts',contactObservationType_t,('index'),zlib=True,complevel=9)
     else:
         group = resp["value"]

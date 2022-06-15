@@ -13,6 +13,7 @@ from Perturb.spherical_utils import sample_vMF
 import os
 import math
 import configparser
+import numpy as np
 
 os.environ['PROJ_LIB'] = 'C:\\Users\\00103098\\.conda\\envs\\EnGen_Jan\\Library\\share\\proj'
 
@@ -125,10 +126,10 @@ global_intf_contact_grp_type,global_intf_fault_grp_type,local_bool_intf_contact_
         intf_contact_layerid = []
         intf_faultobservations_eventid = stringToList(intf_faultobservations_eventid)
 
-    #Store the perturbed outfile in the corresponding folder with path.
+    #Store the perturbed outfile in the corresponding folder with path(.csv and loop3d files).
     path_interface = path_to_perturb_models +  'Interface' 
    
-    if (intf_contact_grp_type =='contacts'):
+    if (intf_contact_grp_type =='contacts'):  #contact element in loop file for interface
         resp = LF.Get(path_to_m2l_files + netcdf_file_name,"contacts")
         if resp['errorFlag']:
             #print(resp['errorString'])
@@ -140,17 +141,23 @@ global_intf_contact_grp_type,global_intf_fault_grp_type,local_bool_intf_contact_
         output_location = path_interface + '/' + 'contacts'
 
         if (global_intf_contact_grp_type == 'True' ):
-            output_location = output_location + '/' + 'global_intf_contact_grp_type' 
-            if(not os.path.isdir(output_location)):
-                os.makedirs(output_location) 
+            output_location1 = output_location + '/' + 'global_intf_contact_grp_type_csv' 
+            output_location2 = output_location + '/' + 'global_intf_contact_grp_type_loop3d' 
+            if(not os.path.isdir(output_location1)):
+                os.makedirs(output_location1)
+            if(not os.path.isdir(output_location2)):
+                os.makedirs(output_location2)
         
         elif (local_bool_intf_contact_grp_type  == 'True'):
-            output_location = output_location + '/' + 'local_bool_intf_contact_grp_type' 
-            if(not os.path.isdir(output_location)):
-                os.makedirs(output_location) 
+            output_location1 = output_location + '/' + 'local_bool_intf_contact_grp_type_csv' 
+            output_location2 = output_location + '/' + 'local_bool_intf_contact_grp_type_loop3d'  
+            if(not os.path.isdir(output_location1)):
+                os.makedirs(output_location1) 
+            if(not os.path.isdir(output_location2)):
+                os.makedirs(output_location2)
     
             
-    elif( intf_fault_grp_type == 'faultobservations'):
+    elif( intf_fault_grp_type == 'faultobservations'):  #fault element in loop file for interface
         resp = LF.Get(path_to_m2l_files + netcdf_file_name,"faultObservations")
         if resp['errorFlag']:
             df = pd.DataFrame()
@@ -161,14 +168,21 @@ global_intf_contact_grp_type,global_intf_fault_grp_type,local_bool_intf_contact_
         output_location = path_interface + '/' + 'faultobservations'
 
         if (global_intf_fault_grp_type == 'True' ):
-            output_location = output_location + '/' + 'global_intf_fault_grp_type' 
-            if(not os.path.isdir(output_location)):
-                os.makedirs(output_location)
+            output_location1 = output_location + '/' + 'global_intf_fault_grp_type_csv' 
+            output_location2 = output_location + '/' + 'global_intf_fault_grp_type_loop3d'  
+            if(not os.path.isdir(output_location1)):
+                os.makedirs(output_location1)
+            if(not os.path.isdir(output_location2)):
+                os.makedirs(output_location2)
 
         if (local_bool_intf_fault_grp_type == 'True' ):
-            output_location = output_location + '/' + 'local_bool_intf_fault_grp_type'
-            if(not os.path.isdir(output_location)):
-                os.makedirs(output_location) 
+            output_location1 = output_location + '/' + 'local_bool_intf_fault_grp_type_csv'
+            output_location2 = output_location + '/' + 'local_bool_intf_fault_grp_type_loop3d'
+            if(not os.path.isdir(output_location1)):
+                os.makedirs(output_location1)
+            if(not os.path.isdir(output_location2)):
+                os.makedirs(output_location2) 
+
 
 
       
@@ -240,7 +254,8 @@ global_intf_contact_grp_type,global_intf_fault_grp_type,local_bool_intf_contact_
                                 new_coords.loc[r, 'altitude'] = elevation
                 if local_bool_intf_contact_grp_type == 'True'  :
                     file_name = 'local_intf_contact_grp_type' + "_" + str(m) + ".csv"
-                    new_coords.to_csv(output_location + '/' + file_name, index=False)  
+                    new_coords.to_csv(output_location1 + '/' + file_name, index=False)
+                    interface_contact_perturbed_csv_loop3d(output_location1 , output_location2 , file_name)
 
             elif (local_bool_intf_fault_grp_type == 'True'  and len(intf_faultobservations_eventid) > 0 ) :  #local fault interface perturbation
                 for r in range(len(resp['value'])):
@@ -258,7 +273,8 @@ global_intf_contact_grp_type,global_intf_fault_grp_type,local_bool_intf_contact_
 
                 if  local_bool_intf_fault_grp_type == 'True' :
                     file_name = 'local_intf_fault_grp_type' + "_" + str(m) + ".csv"
-                    new_coords.to_csv(output_location + '/' + file_name, index=False)  
+                    new_coords.to_csv(output_location1 + '/' + file_name, index=False)  
+                    interface_fault_perturbed_csv_loop3d(output_location1 , output_location2 , file_name)
                 
             else: # global , contact, fault perturbation
                 for r in range(len(resp['value'])):
@@ -271,6 +287,16 @@ global_intf_contact_grp_type,global_intf_fault_grp_type,local_bool_intf_contact_
                         new_coords.loc[r, 'altitude'] = df._get_value(r, 'altitude')
                     else:
                         new_coords.loc[r, 'altitude'] = elevation
+                        
+                if global_intf_contact_grp_type =='True' :
+                    file_name = 'global_intf_contact_grp_type' + "_" + str(m) + ".csv"
+                    new_coords.to_csv(output_location1 + '/' + file_name, index=False)
+                    interface_contact_perturbed_csv_loop3d(output_location1 , output_location2 , file_name)  
+                    
+                elif global_intf_fault_grp_type == 'True'  :
+                    file_name = 'global_intf_fault_grp_type' + "_" + str(m) + ".csv"
+                    new_coords.to_csv(output_location1 + '/' +  file_name, index=False)
+                    interface_fault_perturbed_csv_loop3d(output_location1 , output_location2 , file_name) 
 
                 
         else:
@@ -286,7 +312,8 @@ global_intf_contact_grp_type,global_intf_fault_grp_type,local_bool_intf_contact_
                 
                 if local_bool_intf_contact_grp_type == 'True' :
                     file_name = 'local_intf_contact_grp_type' + "_" + str(m) + ".csv"
-                    new_coords.to_csv(output_location + '/'  +  file_name, index=False)  
+                    new_coords.to_csv(output_location1 + '/'  +  file_name, index=False)
+                    interface_contact_perturbed_csv_loop3d(output_location1 , output_location2 , file_name) 
 
 
             elif (local_bool_intf_fault_grp_type == 'True'    and len(intf_faultobservations_eventid) > 0 ) :  #local fault interface perturbation
@@ -301,7 +328,8 @@ global_intf_contact_grp_type,global_intf_fault_grp_type,local_bool_intf_contact_
 
                 if  local_bool_intf_fault_grp_type == 'True' :
                     file_name = 'local_intf_fault_grp_type' + "_" + str(m) + ".csv"
-                    new_coords.to_csv(output_location + '/' + file_name, index=False) 
+                    new_coords.to_csv(output_location1 + '/' + file_name, index=False)
+                    interface_fault_perturbed_csv_loop3d(output_location1 , output_location2 , file_name) 
 
             elif global_intf_fault_grp_type == 'True'   or global_intf_contact_grp_type == 'True'  :# global fault and interface perturbation.
                 for r in range(len(resp['value'])):
@@ -313,11 +341,13 @@ global_intf_contact_grp_type,global_intf_fault_grp_type,local_bool_intf_contact_
               
                 if global_intf_contact_grp_type =='True' :
                     file_name = 'global_intf_contact_grp_type' + "_" + str(m) + ".csv"
-                    new_coords.to_csv(output_location + '/' + file_name, index=False)  
+                    new_coords.to_csv(output_location1 + '/' + file_name, index=False)  
+                    interface_contact_perturbed_csv_loop3d(output_location1 , output_location2 , file_name) 
                     
                 elif global_intf_fault_grp_type == 'True'  :
                     file_name = 'global_intf_fault_grp_type' + "_" + str(m) + ".csv"
-                    new_coords.to_csv(output_location + '/' +  file_name, index=False)  
+                    new_coords.to_csv(output_location1 + '/' +  file_name, index=False)
+                    interface_fault_perturbed_csv_loop3d(output_location1 , output_location2 , file_name) 
                         
         
     return
@@ -411,7 +441,7 @@ global_ori_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_gr
     
     
 
-    if( ori_fault_grp_type == 'faultobservations'):
+    if( ori_fault_grp_type == 'faultobservations'):  #fault  element in loop file for orienation
         resp = LF.Get(path_to_m2l_files + netcdf_file_name,"faultObservations")
         if resp['errorFlag']:
             df = pd.DataFrame()
@@ -422,17 +452,23 @@ global_ori_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_gr
         output_location = path_Orientation + '/' + 'faultobservations'
 
         if (global_ori_fault_grp_type == 'True' ):
-            output_location = output_location + '/' + 'global_ori_fault_grp_type' 
-            if(not os.path.isdir(output_location)):
-                os.makedirs(output_location) 
+            output_location1 = output_location + '/' + 'global_ori_fault_grp_type_csv' 
+            output_location2 = output_location + '/' + 'global_ori_fault_grp_type_loop3d'
+            if(not os.path.isdir(output_location1)):
+                os.makedirs(output_location1)
+            if(not os.path.isdir(output_location2)):
+                os.makedirs(output_location2)  
         
         elif (local_bool_ori_fault_grp_type  == 'True'):
-            output_location = output_location + '/' + 'local_bool_ori_fault_grp_type' 
-            if(not os.path.isdir(output_location)):
-                os.makedirs(output_location) 
+            output_location1 = output_location + '/' + 'local_bool_ori_fault_grp_type_csv' 
+            output_location2 = output_location + '/' + 'local_bool_ori_fault_grp_type_loop3d'
+            if(not os.path.isdir(output_location1)):
+                os.makedirs(output_location1)
+            if(not os.path.isdir(output_location2)):
+                os.makedirs(output_location2) 
         
 
-    elif( ori_strati_grp_type == 'stratigraphicobservations'):
+    elif( ori_strati_grp_type == 'stratigraphicobservations'): #startigraphic element in loop file for orienarion
         resp = LF.Get(path_to_m2l_files + netcdf_file_name,"stratigraphicObservations")
         if resp['errorFlag']:
             df = pd.DataFrame()
@@ -443,14 +479,20 @@ global_ori_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_gr
         output_location = path_Orientation + '/' + 'stratigraphicobservations'
 
         if (global_ori_strati_grp_type == 'True' ):
-            output_location = output_location + '/' + 'global_ori_strati_grp_type' 
-            if(not os.path.isdir(output_location)):
-                os.makedirs(output_location) 
+            output_location1 = output_location + '/' + 'global_ori_strati_grp_type_csv' 
+            output_location2 = output_location + '/' + 'global_ori_strati_grp_type_loop3d' 
+            if(not os.path.isdir(output_location1)):
+                os.makedirs(output_location1)
+            if(not os.path.isdir(output_location2)):
+                os.makedirs(output_location2) 
         
         elif (local_bool_ori_strati_grp_type  == 'True'):
-            output_location = output_location + '/' + 'local_bool_ori_strati_grp_type' 
-            if(not os.path.isdir(output_location)):
-                os.makedirs(output_location)
+            output_location1 = output_location + '/' + 'local_bool_ori_strati_grp_type_csv' 
+            output_location2 = output_location + '/' + 'local_bool_ori_strati_grp_type_loop3d' 
+            if(not os.path.isdir(output_location1)):
+                os.makedirs(output_location1)
+            if(not os.path.isdir(output_location2)):
+                os.makedirs(output_location2) 
 
     
     if dem is True:
@@ -525,7 +567,8 @@ global_ori_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_gr
 
             if local_bool_ori_strati_grp_type == 'True' :
                 file_name = 'local_bool_ori_strati_grp_type' + "_" + str(m) + ".csv"
-                new_coords.to_csv(output_location + '/'  +  file_name, index=False)
+                new_coords.to_csv(output_location1 + '/'  +  file_name, index=False)
+                orientaion_stratigraphy_perturbed_csv_loop3d(output_location1 , output_location2 , file_name)
 
 
             
@@ -549,7 +592,8 @@ global_ori_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_gr
 
             if local_bool_ori_fault_grp_type == 'True' :
                 file_name = 'local_bool_ori_fault_grp_type' + "_" + str(m) + ".csv"
-                new_coords.to_csv(output_location + '/'  +  file_name, index=False)
+                new_coords.to_csv(output_location1 + '/'  +  file_name, index=False)
+                orienation_fault_perturbed_csv_loop3d(output_location1 , output_location2 , file_name)
             
 
         elif global_ori_strati_grp_type == 'True' or global_ori_fault_grp_type == 'True' : #global  orienation  using , which pertubes all data.
@@ -571,11 +615,14 @@ global_ori_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_gr
 
             if global_ori_strati_grp_type =='True' :
                 file_name = 'global_ori_strati_grp_type' + "_" + str(m) + ".csv"
-                new_coords.to_csv(output_location + '/' + file_name, index=False)  
+                new_coords.to_csv(output_location1 + '/' + file_name, index=False)
+                orientaion_stratigraphy_perturbed_csv_loop3d(output_location1 , output_location2 , file_name)                
                     
             elif global_ori_fault_grp_type == 'True'  :
                 file_name = 'global_ori_fault_grp_type' + "_" + str(m) + ".csv"
-                new_coords.to_csv(output_location + '/' +  file_name, index=False) 
+                new_coords.to_csv(output_location1 + '/' +  file_name, index=False)
+                orienation_fault_perturbed_csv_loop3d(output_location1 , output_location2 , file_name)
+                
                
 
 
@@ -601,7 +648,8 @@ global_ori_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_gr
 
                 if local_bool_ori_fault_grp_type =='True' :
                     file_name = 'local_bool_ori_fault_grp_type' + "_" + str(s) + ".csv"
-                    new_orient.to_csv(output_location + '/' + file_name, index=False)
+                    new_orient.to_csv(output_location1 + '/' + file_name, index=False)
+                    orienation_fault_perturbed_csv_loop3d(output_location1 , output_location2 , file_name)
 
                 
 
@@ -632,7 +680,8 @@ global_ori_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_gr
 
                 if local_bool_ori_strati_grp_type =='True' :
                     file_name = 'local_bool_ori_strati_grp_type' + "_" + str(s) + ".csv"
-                    new_orient.to_csv(output_location + '/' + file_name, index=False)
+                    new_orient.to_csv(output_location1 + '/' + file_name, index=False)
+                    orientaion_stratigraphy_perturbed_csv_loop3d(output_location1 , output_location2 , file_name)
 
 
 
@@ -658,7 +707,8 @@ global_ori_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_gr
                 
                 if global_ori_fault_grp_type =='True' :
                     file_name = 'global_ori_fault_grp_type' + "_" + str(s) + ".csv"
-                    new_orient.to_csv(output_location + '/' + file_name, index=False)
+                    new_orient.to_csv(output_location1 + '/' + file_name, index=False)
+                    orienation_fault_perturbed_csv_loop3d(output_location1 , output_location2 , file_name)
 
 
 
@@ -684,7 +734,8 @@ global_ori_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_gr
                 
                 if global_ori_strati_grp_type =='True' :
                     file_name = 'global_ori_strati_grp_type' + "_" + str(s) + ".csv"
-                    new_orient.to_csv(output_location + '/' + file_name, index=False)
+                    new_orient.to_csv(output_location1 + '/' + file_name, index=False)
+                    orientaion_stratigraphy_perturbed_csv_loop3d(output_location1 , output_location2 , file_name)
 
 
     return
@@ -693,29 +744,29 @@ global_ori_fault_grp_type,local_bool_ori_strati_grp_type,local_bool_ori_fault_gr
     
     
     
-######drillhole	
+
 def drillhole_perturb(path_to_m2l_files,path_to_perturb_models,netcdf_file_name1,netcdf_file_name2,netcdf_file_name3,egen_runs,dem,source_geomodeller,\
     drillhole_grp_type1,drillhole_grp_type2,drillhole_grp_type3,global_bool_drillhole,local_bool_drillhole,drillhole_collarid,distribution,erraz,errdip,errlength,perturb):
     '''
-        Function : function perturb drillhole data for number of models 
+        Function : function perturb drillhole data for number of models given in ini file.
         Input : path_to_m2l_files : string type path to maploop file 
             path_to_perturb_models:string type path to perturbed model files. 
-            netcdf_file_name1: string type path to netcdf files used for drillhole. 
-            netcdf_file_name2: string type path to netcdf files used for drillhole. 
-            netcdf_file_name3: string type path to netcdf files used for drillhole. 
-            egen_runs: integer number of models.
+            netcdf_file_name1: string type path to netcdf files used for drillhole collar file. 
+            netcdf_file_name2: string type path to netcdf files used for drillhole survey file. 
+            netcdf_file_name3: string type path to netcdf files used for drillhole lithology file. 
+            egen_runs: integer number of models to generate after perturbation.
             dem: boolean dem value.
             source_geomodeller: boolean type.
-            drillhole_grp_type1,drillhole_grp_type2,drillhole_grp_type3 : netcdf file elemnts names to extract drillhole data.
+            drillhole_grp_type1,drillhole_grp_type2,drillhole_grp_type3 : flags for netcdf file elemnts names to extract drillhole data.
             distribution: string type to specify distribution.
-            global_bool_drillhole,local_bool_drillhole :global , local flag for drillhole perturbation
-            drillhole_collarid : list of collarID to perturb.
+            global_bool_drillhole,local_bool_drillhole :global , local flag for drillhole perturbation.
+            drillhole_collarid : list of collarID to perturb for local drillhole.
             error_gps:integer error value.
-            perturb:string type for perturbation
-        output : orienation pertubation to te number of models 
+            perturb:string type for perturbation.
+        output : drillhole pertubation to te number of models. 
     '''
 
-    
+    # write input data to csv file.
     path_to_perturb_models = path_to_perturb_models. replace(',', '').replace('\'', '')
     params_file = open(path_to_perturb_models +  "Drillhole_MCpara_before_per.csv", "w")
     params_file.write("samples," + str(egen_runs) + "\n")
@@ -731,41 +782,28 @@ def drillhole_perturb(path_to_m2l_files,path_to_perturb_models,netcdf_file_name1
     params_file.write("DEM," + str(dem) + "\n")
     params_file.close()
 
-
+    #data from .ini file are as string with comma ("," ).convert before using.
     egen_runs = egen_runs.replace(',', '').replace('\'', '')
-    #print(egen_runs)
     path_to_m2l_files = path_to_m2l_files.replace(',', '').replace('\'', '')
-    #print(path_to_m2l_files)
     netcdf_file_name1 = netcdf_file_name1.replace(',', '').replace('\'', '')
-    #rint(netcdf_file_name1)
     netcdf_file_name2 = netcdf_file_name2.replace(',', '').replace('\'', '')
-   # print(netcdf_file_name2)
     netcdf_file_name3 = netcdf_file_name3.replace(',', '').replace('\'', '')
 
     path_to_perturb_models =  path_to_perturb_models.replace(',', '').replace('\'', '')
-    #print(netcdf_file_name3)
-    
     drillhole_grp_type1 = str(drillhole_grp_type1).replace(',', '').replace('\'', '')
-    #print(drillhole_grp_type1)
     drillhole_grp_type2 = str(drillhole_grp_type2).replace(',', '').replace('\'', '')
-    #print(drillhole_grp_type2)
     drillhole_grp_type3 = str(drillhole_grp_type3).replace(',', '').replace('\'', '')
-    #print(drillhole_grp_type3)
+    
 
     global_bool_drillhole = str(global_bool_drillhole).replace(',', '').replace('\'', '')
-    #print(global_bool_drillhole)
     local_bool_drillhole = str(local_bool_drillhole).replace(',', '').replace('\'', '')
-    #print(local_bool_drillhole)
+    
 
     dem = str(dem).replace(',', '').replace('\'', '')
-    #error_gps = float(error_gps.replace(',', '').replace('\'', ''))
     erraz = (erraz.replace(',', '').replace('\'', ''))
     errdip = (errdip.replace(',', '').replace('\'', ''))
     errlength = (errlength.replace(',', '').replace('\'', ''))
-    #if dem == 'False':
-     #   print('dem')
-
-    #print(dem)
+    
 
 
 
@@ -778,76 +816,64 @@ def drillhole_perturb(path_to_m2l_files,path_to_perturb_models,netcdf_file_name1
         
    
     
-    #print(global_bool_drillhole)
-    #print(local_bool_drillhole)
-    #print(drillhole_collarid)
-
+    
+    #path to the output files geberated after perturbation.
     path_drillhole = path_to_perturb_models +  'Drillhole' 
     output_location = path_drillhole
     
     
 
     if (global_bool_drillhole == 'True' ):
-        output_location = output_location + '/' + 'global_bool_drillhole' 
-        if(not os.path.isdir(output_location)):
-            os.makedirs(output_location) 
-        
+        output_location1 = output_location + '/' + 'global_bool_drillhole_csv' 
+        output_location2 = output_location + '/' + 'global_bool_drillhole_loop3d' 
+        if(not os.path.isdir(output_location1)):
+            os.makedirs(output_location1) 
+        if(not os.path.isdir(output_location2)):
+            os.makedirs(output_location2)
+            
+            
     elif (local_bool_drillhole  == 'True'):
-        output_location = output_location + '/' + 'local_bool_drillhole' 
-        if(not os.path.isdir(output_location)):
-            os.makedirs(output_location) 
+        output_location1 = output_location + '/' + 'local_bool_drillhole_csv' 
+        output_location2 = output_location + '/' + 'local_bool_drillhole_loop3d' 
+        if(not os.path.isdir(output_location1)):
+            os.makedirs(output_location1) 
+        if(not os.path.isdir(output_location2)):
+            os.makedirs(output_location2) 
    
+   #flags to read collar,survey,litology elements in loopproectFile.
     if (drillhole_grp_type1 =='drillholelog' and drillhole_grp_type2 =='drillholesurveys' and drillhole_grp_type3 =='drillholeobservations'):
-        #print("1")
         resp1 = LF.Get(path_to_m2l_files + netcdf_file_name1,"drillholeLog")
         if resp1['errorFlag']:
            collar_df = pd.DataFrame()
         else:
            collar_df = pd.DataFrame.from_records(resp1['value'],columns=['collarId', 'holeName','surfaceX','surfaceY','surfaceZ'])
-           new_coords1 = pd.DataFrame(numpy.zeros((len(resp1['value']), 5)), columns=['collarId', 'holeName','surfaceX','surfaceY','surfaceZ'])  # we dont perturb collar data we use first surveyx,y,z
+           new_coords1 = pd.DataFrame(numpy.zeros((len(resp1['value']), 5)), columns=['collarId', 'holeName','surfaceX','surfaceY','surfaceZ'])  # we dont perturb collar data we use first row.
            new_coords1.collarId = collar_df.collarId.astype(str)
            new_coords1.holeName = collar_df.holeName.astype(str)
            new_coords1.surfaceX = collar_df.surfaceX.astype(float)
            new_coords1.surfaceY = collar_df.surfaceY.astype(float)
            new_coords1.surfaceZ = collar_df.surfaceZ.astype(float)
            file_name1 = 'drillhole_collar' +  ".csv"
-           new_coords1.to_csv(output_location + '/'  +  file_name1, index=False) 
-        #print(collar_df)
+           new_coords1.to_csv(output_location1 + '/'  +  file_name1, index=False)
+           drillhole_collar_csv_loop3d(output_location1 , output_location2 , file_name1)
+        
 
-        resp2 = LF.Get(path_to_m2l_files + netcdf_file_name2,"drillholeSurveys")
+        resp2 = LF.Get(path_to_m2l_files + netcdf_file_name2,"drillholeSurveys")  #survey data from loopprojectFile.
         if resp2['errorFlag']:
            survey_df = pd.DataFrame()
         else:
            survey_df = pd.DataFrame.from_records(resp2['value'],columns=['collarId', 'depth','angle1','angle2','unit'])
-        #print(survey_df)
+        
         
 
-        resp3 = LF.Get(path_to_m2l_files + netcdf_file_name3,"drillholeObservations")
+        resp3 = LF.Get(path_to_m2l_files + netcdf_file_name3,"drillholeObservations")     #lithology data from loopprojectFile.
         if resp3['errorFlag']:
            lithology_df = pd.DataFrame()
         else:
            lithology_df = pd.DataFrame.from_records(resp3['value'],columns=['collarId', 'fromX','fromY','fromZ','layerId','toX','toY', 'toZ','from','to','propertyCode','property1','property2','unit'])
-        #print(lithology_df)
-
         
-        
-        
-        #output_location = path_interface 
 
-        #if (global_bool_drillhole == 'True' ):
-         #   output_location = output_location + '/' + 'global_bool_drillhole' 
-          #  if(not os.path.isdir(output_location)):
-               # os.makedirs(output_location) 
-        
-        #elif (local_bool_drillhole  == 'True'):
-         #   output_location = output_location + '/' + 'local_bool_drillhole' 
-          #  if(not os.path.isdir(output_location)):
-          #      os.makedirs(output_location) 
-    
-            
-    
-
-
+  
     if dem is True:
         if source_geomodeller is True:
             load_this = glob.glob(f'''./MeshGrids/DTM.igmesh/*.ers''')
@@ -874,32 +900,21 @@ def drillhole_perturb(path_to_m2l_files,path_to_perturb_models,netcdf_file_name1
 
     for m in range(0, int(egen_runs)):
         if (drillhole_grp_type1 =='drillholelog' and drillhole_grp_type2 =='drillholesurveys' and drillhole_grp_type3 =='drillholeobservations'):
-            #new_coords1 = pd.DataFrame(numpy.zeros((len(resp1['value']), 5)), columns=['collarId', 'holeName','surfaceX','surfaceY','surfaceZ'])  # uniform
-            #if local_bool_drillhole == 'True' or global_bool_drillhole == 'True' :
-                #new_coords1 = collar_df[collar_df["collarId"].isin(drillhole_collarid)].copy()
-                #print(new_coords1)
-            #elif global_bool_drillhole == 'True':
-                #new_coords1.collarId = collar_df.collarId.astype(str)
-                #new_coords1.holeName = collar_df.holeName.astype(str)
-                #new_coords1.surfaceX = collar_df.surfaceX.astype(float)
-                #new_coords1.surfaceY = collar_df.surfaceY.astype(float)
-                #new_coords1.surfaceZ = collar_df.surfaceZ.astype(float)
-                #print(new_coords1)
             new_coords2 = pd.DataFrame(numpy.zeros((len(resp2['value']), 5)), columns=['collarId', 'depth','angle1','angle2','unit'])  # uniform
             if local_bool_drillhole == 'True':
                 new_coords2 = survey_df[survey_df["collarId"].isin(drillhole_collarid)].copy()
-                #print(new_coords2)
+                
             elif global_bool_drillhole == 'True':
-                new_coords2.depth = survey_df.depth.astype(str)
-                new_coords2.collarId = survey_df.collarId.astype(str)
+                new_coords2.depth = survey_df.depth.astype(int)
+                new_coords2.collarId = survey_df.collarId.astype(int)
                 new_coords2.unit = survey_df.unit.astype(float)
-                #print(new_coords2)
+                
             new_coords3 = pd.DataFrame(numpy.zeros((len(resp3['value']), 14)), columns=['collarId', 'fromX','fromY','fromZ','layerId','toX','toY', 'toZ','from','to','propertyCode','property1','property2','unit'])  # uniform
             if local_bool_drillhole == 'True':
                 new_coords3 = lithology_df[lithology_df["collarId"].isin(drillhole_collarid)].copy()
-                #print(new_coords3)
+                
             elif global_bool_drillhole == 'True':
-                new_coords3.collarId = lithology_df.collarId.astype(str)
+                new_coords3.collarId = lithology_df.collarId.astype(int)
                 new_coords3.fromX = lithology_df.fromX.astype(float)
                 new_coords3.fromY = lithology_df.fromY.astype(float)
                 new_coords3.fromZ = lithology_df.fromZ.astype(float)
@@ -911,124 +926,517 @@ def drillhole_perturb(path_to_m2l_files,path_to_perturb_models,netcdf_file_name1
                 new_coords3.property1 = lithology_df.property1.astype(float)
                 new_coords3.property2 = lithology_df.property2.astype(float)
                 new_coords3.unit = lithology_df.unit.astype(float)
-                #print(new_coords3)
+                
 
 
         
         
-            if (local_bool_drillhole == 'True'   and len(drillhole_collarid) > 0 ) :  #local conact interface  ,intf_faultObservations_eventId,
+            if (local_bool_drillhole == 'True'   and len(drillhole_collarid) > 0 ) :  #local drillhole perturbation considered by collarid. 
                 first_depth_from_zero =  False
+                prev_collarID = 0
                 for r1 in range(len(resp2['value'])):
+                    if survey_df._get_value(r1,'collarId') != prev_collarID:
+                        first_depth_from_zero = False
                     for r2 in range(len(resp3['value'])):
                         for ele in drillhole_collarid :
                             if survey_df._get_value(r1,'collarId') == ele and  lithology_df._get_value(r2,'collarId') == ele :
-                                #if  survey_df._get_value(r1,'depth') == 0 and  lithology_df._get_value(r2,'from') ==  0 and first_depth_from_zero == False : #if condition required keep if and else or one block is ok.
-                                #first_depth_from_zero = True
-                                start_x =  survey_df._get_value(r1,'angle1')
-                                new_coords2.loc[r1, 'angle1'] = dist_func(size=1, loc=(start_x) - float(erraz), scale=float(erraz))  # value error
-                                start_y =  survey_df._get_value(r1,'angle2')
-                                new_coords2.loc[r1, 'angle2'] = dist_func(size=1, loc=(start_y) - float(errdip), scale=float(errdip))  # value error
+                                if  survey_df._get_value(r1,'depth') == 0 and  lithology_df._get_value(r2,'from') ==  0 and first_depth_from_zero == False : #check for depth , from starts with 0 for new holeID
+                                    first_depth_from_zero = True
+                                    start_x =  survey_df._get_value(r1,'angle1')
+                                    new_coords2.loc[r1, 'angle1'] = dist_func(size=1, loc=(start_x) - float(erraz), scale=float(erraz))  # value error
+                                    start_y =  survey_df._get_value(r1,'angle2')
+                                    new_coords2.loc[r1, 'angle2'] = dist_func(size=1, loc=(start_y) - float(errdip), scale=float(errdip))  # value error
                     
-                                litho_to =  lithology_df._get_value(r2,'to') 
-                                litho_from =  lithology_df._get_value(r2,'from') 
-                                length = (lithology_df._get_value(r2,'to')) - (lithology_df._get_value(r2,'from'))
-                                start_z =  dist_func(size=1, loc= length - float(errlength), scale=float(errlength))
-                                new_coords3.loc[r2, 'from'] = dist_func(size=1, loc= litho_from - float(errlength), scale=float(errlength))  # value error
-                                new_coords3.loc[r2, 'to'] = dist_func(size=1, loc= litho_to - float(errlength), scale= float(errlength))  # value error
-                            #else:
-                                #first_depth_from_zero = False
-                                #start_x =  survey_df._get_value(r1,'angle1')
-                                #new_coords2.loc[r1, 'angle1'] = dist_func(size=1, loc=(start_x) - float(erraz), scale=float(erraz))  # value error
-                                #start_y =  survey_df._get_value(r1,'angle2')
-                                #new_coords2.loc[r1, 'angle2'] = dist_func(size=1, loc=(start_y) - float(errdip), scale= float(errdip))  # value error
+                                    litho_to =  lithology_df._get_value(r2,'to') 
+                                    litho_from =  lithology_df._get_value(r2,'from') 
+                                    length = (lithology_df._get_value(r2,'to')) - (lithology_df._get_value(r2,'from'))
+                                    start_z =  dist_func(size=1, loc= length - float(errlength), scale=float(errlength))
+                                    new_coords3.loc[r2, 'from'] = dist_func(size=1, loc= litho_from - float(errlength), scale=float(errlength))  # value error
+                                    new_coords3.loc[r2, 'to'] = dist_func(size=1, loc= litho_to - float(errlength), scale= float(errlength))  # value error
+                                elif survey_df._get_value(r1,'depth') == 0 and  lithology_df._get_value(r2,'from') !=  0 and first_depth_from_zero == True :  # check for second row in lithology of each hole.
+                                    start_x =  survey_df._get_value(r1,'angle1')
+                                    new_coords2.loc[r1, 'angle1'] = dist_func(size=1, loc=(start_x) - float(erraz), scale=float(erraz))  # value error
+                                    start_y =  survey_df._get_value(r1,'angle2')
+                                    new_coords2.loc[r1, 'angle2'] = dist_func(size=1, loc=(start_y) - float(errdip), scale= float(errdip))  # value error
                     
-                                #litho_to =  lithology_df._get_value(r2,'to') 
-                                #litho_from =  lithology_df._get_value(r2,'from') 
-                                #length = (lithology_df._get_value(r2,'to')) - (lithology_df._get_value(r2,'from'))
-                                #start_z =  dist_func(size=1, loc= length - float(errlength), scale=errlength) 
-                                #new_coords3.loc[r2, 'from'] = dist_func(size=1, loc= litho_from - float(errlength), scale=float(errlength))  # value error
-                                #new_coords3.loc[r2, 'to'] = dist_func(size=1, loc= litho_to - float(errlength), scale=float(errlength))  # value error
+                                    litho_to =  lithology_df._get_value(r2,'to') 
+                                    litho_from =  lithology_df._get_value(r2,'from') 
+                                    length = (lithology_df._get_value(r2,'to')) - (lithology_df._get_value(r2,'from'))
+                                    start_z =  dist_func(size=1, loc= length - float(errlength), scale= float(errlength))
+                                    new_coords3.loc[r2, 'from'] = dist_func(size=1, loc= litho_from - float(errlength), scale=float(errlength))  # value error
+                                    new_coords3.loc[r2, 'to'] = dist_func(size=1, loc= litho_to - float(errlength), scale=float(errlength))  # value error
+
+                                elif survey_df._get_value(r1,'depth') != 0 and  lithology_df._get_value(r2,'from') !=  0 and first_depth_from_zero == True :  # check for second row in lithology of each hole.
+                                    start_x =  survey_df._get_value(r1,'angle1')
+                                    new_coords2.loc[r1, 'angle1'] = dist_func(size=1, loc=(start_x) - float(erraz), scale=float(erraz))  # value error
+                                    start_y =  survey_df._get_value(r1,'angle2')
+                                    new_coords2.loc[r1, 'angle2'] = dist_func(size=1, loc=(start_y) - float(errdip), scale= float(errdip))  # value error
+                    
+                                    litho_to =  lithology_df._get_value(r2,'to') 
+                                    litho_from =  lithology_df._get_value(r2,'from') 
+                                    length = (lithology_df._get_value(r2,'to')) - (lithology_df._get_value(r2,'from'))
+                                    start_z =  dist_func(size=1, loc= length - float(errlength), scale= float(errlength))
+                                    new_coords3.loc[r2, 'from'] = dist_func(size=1, loc= litho_from - float(errlength), scale=float(errlength))  # value error
+                                    new_coords3.loc[r2, 'to'] = dist_func(size=1, loc= litho_to - float(errlength), scale=float(errlength))  # value error
+
+                                elif survey_df._get_value(r1,'depth') != 0 and  lithology_df._get_value(r2,'from') ==  0 and first_depth_from_zero == True :  #check for second row in survey table.
+                                    start_x =  survey_df._get_value(r1,'angle1')
+                                    new_coords2.loc[r1, 'angle1'] = dist_func(size=1, loc=(start_x) - float(erraz), scale=float(erraz))  # value error
+                                    start_y =  survey_df._get_value(r1,'angle2')
+                                    new_coords2.loc[r1, 'angle2'] = dist_func(size=1, loc=(start_y) - float(errdip), scale= float(errdip))  # value error
+                    
+                                    litho_to =  lithology_df._get_value(r2,'to') 
+                                    litho_from =  lithology_df._get_value(r2,'from') 
+                                    length = (lithology_df._get_value(r2,'to')) - (lithology_df._get_value(r2,'from'))
+                                    start_z =  dist_func(size=1, loc= length - float(errlength), scale= float(errlength))
+                                    new_coords3.loc[r2, 'from'] = dist_func(size=1, loc= litho_from - float(errlength), scale=float(errlength))  # value error
+                                    new_coords3.loc[r2, 'to'] = dist_func(size=1, loc= litho_to - float(errlength), scale=float(errlength))  # value error
 
 
-                            #else: go to next hole
+                                elif survey_df._get_value(r1,'depth') != 0 or  lithology_df._get_value(r2,'from') !=  0 and first_depth_from_zero == False : #if depth doest start from 0 in survey or lithology,  add a row with depth 0 and existing first row values
+                                    first_depth_from_zero = True
+                                    
+                                    if survey_df._get_value(r1,'depth') != 0 :
+                                        start_x =  survey_df._get_value(r1,'angle1')
+                                        angle1 = dist_func(size=1, loc=(start_x) - float(erraz), scale=float(erraz))  # value error
+                                        new_coords2.loc[r1, 'angle1'] = angle1 
+                                        start_y =  survey_df._get_value(r1,'angle2')
+                                        angle2 = dist_func(size=1, loc=(start_y) - float(errdip), scale=float(errdip))  # value error
+                                        new_coords2.loc[r1, 'angle2'] = angle2 
+                                        collarID_ = survey_df._get_value(r1,'collarId')
+                                        new_coords2.loc[r1, 'depth'] = '0'
+                                        unit = survey_df._get_value(r1,'unit')
+                                        new_coords2.loc[len(new_coords2.index)] = [collarID_, '0', angle1,angle2,unit] 
+                                    if lithology_df._get_value(r2,'from') !=  0 :
+                                        litho_to =  lithology_df._get_value(r2,'to') 
+                                        litho_from =  lithology_df._get_value(r2,'from') 
+                                        length = (lithology_df._get_value(r2,'to')) - (lithology_df._get_value(r2,'from'))
+                                        start_z =  dist_func(size=1, loc= length - float(errlength), scale=float(errlength))
+                                        from_ = dist_func(size=1, loc= litho_from - float(errlength), scale=float(errlength))  # value error
+                                        new_coords3.loc[r2, 'from'] = from_
+                                        to_= dist_func(size=1, loc= litho_to - float(errlength), scale= float(errlength))  # value error
+                                        new_coords3.loc[r2, 'to'] = to_
+                                    
+                                        collarID_ = lithology_df._get_value(r2,'collarId')
+                                        fromX_ = lithology_df._get_value(r2,'fromX')
+                                        fromY_ = lithology_df._get_value(r2,'fromY')
+                                        fromZ_ = lithology_df._get_value(r2,'fromZ')
+                                        layerId_ = lithology_df._get_value(r2,'layerId')
+                                        toX_ = lithology_df._get_value(r2,'toX')
+                                        toY_ = lithology_df._get_value(r2,'toY')
+                                        toZ_ = lithology_df._get_value(r2,'toZ')
+                                        propertyCode_ = lithology_df._get_value(r2,'propertyCode')
+                                        property1_ = lithology_df._get_value(r2,'property1')
+                                        property2_ = lithology_df._get_value(r2,'property2')
+                                        unit_ = lithology_df._get_value(r2,'unit')
+                                        new_coords3.loc[len(new_coords3.index)] = [collarID_, '0', from_,to_,fromX_,fromY_,fromZ_,'layerId_',toX_,toY_,toZ_,propertyCode_,property1_,property2_,unit] 
+                        prev_collarID = ele                
                 
             if local_bool_drillhole == 'True' :
-                    #file_name1 = 'local_drillhole_collar' + "_" + str(m) + ".csv"
-                    #new_coords1.to_csv(output_location + '/'  +  file_name1, index=False)  
-
                 file_name2 = 'local_drillhole_survey' + "_" + str(m) + ".csv"
-                new_coords2.to_csv(output_location + '/'  +  file_name2, index=False)  
+                sorted_new_coords2 = new_coords2.sort_values(by=['collarId','depth'], ascending=[True,True])
+                sorted_new_coords2.to_csv(output_location1 + '/'  +  file_name2, index=False)
+                drillhole_survey_perturbed_csv_loop3d(output_location1 , output_location2 , file_name2)
 
                 file_name3 = 'local_drillhole_lithology' + "_" + str(m) + ".csv"
-                new_coords3.to_csv(output_location + '/'  +  file_name3, index=False)  
+                sorted_new_coords3 = new_coords3.sort_values(by=['collarId','from'], ascending=[True,True])
+                sorted_new_coords3.to_csv(output_location1 + '/'  +  file_name3, index=False)
+                drillhole_lithology_perturbed_csv_loop3d(output_location1 , output_location2 , file_name3)
 
 
-            first_depth_from_zero =  False
-            cur_collarId = 0
-            prev_collarID = 0
-            if global_bool_drillhole == 'True' :  #local conact interface  ,intf_faultObservations_eventId,
-                #first_depth_from_zero =  False
-                #cur_collarId = 0
-                #prev_collarID = 0
+            
+            if global_bool_drillhole == 'True' :  #global drillhole had all drillholes.
+                first_depth_from_zero =  False
+                cur_collarId = 0
+                prev_collarID = 0
                 for r1 in range(len(resp2['value'])):
                     cur_collarId = survey_df._get_value(r1,'collarId')
-                    #prev_collarID = cur_collarId
+                    prev_collarID = cur_collarId
                     if prev_collarID != cur_collarId:
                         first_depth_from_zero = False
-                        break_outer_for = False
-                    if break_outer_for == True:
-                        continue
-
-                    #prev_collarID = cur_collarId
-                    #elif prev_collarID != cur_collarId :
+                        
 
                     for r2 in range(len(resp3['value'])):
                     
                         if survey_df._get_value(r1,'collarId') == cur_collarId and  lithology_df._get_value(r2,'collarId') == cur_collarId :
-                            #if  survey_df._get_value(r1,'depth') == 0 and  lithology_df._get_value(r2,'from') ==  0 and first_depth_from_zero == False : #first collarid with depth and from 0, keep if required
-                                #first_depth_from_zero = True
+                            if  survey_df._get_value(r1,'depth') == 0 and  lithology_df._get_value(r2,'from') ==  0 and first_depth_from_zero == False : 
+                                first_depth_from_zero = True
                                 start_x =  survey_df._get_value(r1,'angle1')
-                                new_coords2.loc[r1, 'angle1'] = dist_func(size=1, loc=(start_x) - float(erraz), scale=float(erraz))  # value error
+                                new_coords2.loc[r1, 'angle1'] = dist_func(size=1, loc=(start_x) - float(erraz), scale=float(erraz))  
                                 start_y =  survey_df._get_value(r1,'angle2')
-                                new_coords2.loc[r1, 'angle2'] = dist_func(size=1, loc=(start_y) - float(errdip), scale= float(errdip))  # value error
+                                new_coords2.loc[r1, 'angle2'] = dist_func(size=1, loc=(start_y) - float(errdip), scale= float(errdip))  
                     
                                 litho_to =  lithology_df._get_value(r2,'to') 
                                 litho_from =  lithology_df._get_value(r2,'from') 
                                 length = (lithology_df._get_value(r2,'to')) - (lithology_df._get_value(r2,'from'))
                                 start_z =  dist_func(size=1, loc= length - float(errlength), scale=float(errlength))
-                                new_coords3.loc[r2, 'from'] = dist_func(size=1, loc= litho_from - float(errlength), scale=float(errlength))  # value error
-                                new_coords3.loc[r2, 'to'] = dist_func(size=1, loc= litho_to - float(errlength), scale=float(errlength))  # value error
+                                new_coords3.loc[r2, 'from'] = dist_func(size=1, loc= litho_from - float(errlength), scale=float(errlength))  
+                                new_coords3.loc[r2, 'to'] = dist_func(size=1, loc= litho_to - float(errlength), scale=float(errlength))  
                                 
 
-                            #elif survey_df._get_value(r1,'depth') != 0 and  lithology_df._get_value(r2,'from') !=  0 and first_depth_from_zero == True : #after first samen collarid with depth and from next values
-                                #first_depth_from_zero = False
-                                #start_x =  survey_df._get_value(r1,'angle1')
-                                #new_coords2.loc[r1, 'angle1'] = dist_func(size=1, loc=(start_x) - float(erraz), scale=float(erraz))  # value error
-                                #start_y =  survey_df._get_value(r1,'angle2')
-                                #new_coords2.loc[r1, 'angle2'] = dist_func(size=1, loc=(start_y) - float(errdip), scale=float(errdip))  # value error
+                            elif survey_df._get_value(r1,'depth') == 0 and  lithology_df._get_value(r2,'from') !=  0 and first_depth_from_zero == True : 
+                                start_x =  survey_df._get_value(r1,'angle1')
+                                new_coords2.loc[r1, 'angle1'] = dist_func(size=1, loc=(start_x) - float(erraz), scale=float(erraz))  
+                                start_y =  survey_df._get_value(r1,'angle2')
+                                new_coords2.loc[r1, 'angle2'] = dist_func(size=1, loc=(start_y) - float(errdip), scale=float(errdip))  
                     
-                                #litho_to =  lithology_df._get_value(r2,'to') 
-                                #litho_from =  lithology_df._get_value(r2,'from') 
-                                #length = (lithology_df._get_value(r2,'to')) - (lithology_df._get_value(r2,'from'))
-                                #start_z =  dist_func(size=1, loc= length - float(errlength), scale=float(errlength))
-                                #new_coords3.loc[r2, 'from'] = dist_func(size=1, loc= litho_from - float(errlength), scale=float(errlength))  # value error
-                                #new_coords3.loc[r2, 'to'] = dist_func(size=1, loc= litho_to - float(errlength), scale=float(errlength))  # value error
-                            #if survey_df._get_value(r1,'depth') != 0 and  lithology_df._get_value(r2,'from') !=  0 and first_depth_from_zero == False : #depth and from not starting from 0 reject collarid
-                              # break_outer_for = True  #hole doesnt start with 0 depth or from dist  go to next collarID
-                              # break
+                                litho_to =  lithology_df._get_value(r2,'to') 
+                                litho_from =  lithology_df._get_value(r2,'from') 
+                                length = (lithology_df._get_value(r2,'to')) - (lithology_df._get_value(r2,'from'))
+                                start_z =  dist_func(size=1, loc= length - float(errlength), scale=float(errlength))
+                                new_coords3.loc[r2, 'from'] = dist_func(size=1, loc= litho_from - float(errlength), scale=float(errlength))  
+                                new_coords3.loc[r2, 'to'] = dist_func(size=1, loc= litho_to - float(errlength), scale=float(errlength))  
+
+                            elif survey_df._get_value(r1,'depth') != 0 and  lithology_df._get_value(r2,'from') ==  0 and first_depth_from_zero == True :
+                                    start_x =  survey_df._get_value(r1,'angle1')
+                                    new_coords2.loc[r1, 'angle1'] = dist_func(size=1, loc=(start_x) - float(erraz), scale=float(erraz))  
+                                    start_y =  survey_df._get_value(r1,'angle2')
+                                    new_coords2.loc[r1, 'angle2'] = dist_func(size=1, loc=(start_y) - float(errdip), scale= float(errdip))  
+                    
+                                    litho_to =  lithology_df._get_value(r2,'to') 
+                                    litho_from =  lithology_df._get_value(r2,'from') 
+                                    length = (lithology_df._get_value(r2,'to')) - (lithology_df._get_value(r2,'from'))
+                                    start_z =  dist_func(size=1, loc= length - float(errlength), scale= float(errlength))
+                                    new_coords3.loc[r2, 'from'] = dist_func(size=1, loc= litho_from - float(errlength), scale=float(errlength))  
+                                    new_coords3.loc[r2, 'to'] = dist_func(size=1, loc= litho_to - float(errlength), scale=float(errlength))  
+
+                            elif survey_df._get_value(r1,'depth') != 0 and  lithology_df._get_value(r2,'from') !=  0 and first_depth_from_zero == True :
+                                    start_x =  survey_df._get_value(r1,'angle1')
+                                    new_coords2.loc[r1, 'angle1'] = dist_func(size=1, loc=(start_x) - float(erraz), scale=float(erraz))  
+                                    start_y =  survey_df._get_value(r1,'angle2')
+                                    new_coords2.loc[r1, 'angle2'] = dist_func(size=1, loc=(start_y) - float(errdip), scale= float(errdip))  
+                    
+                                    litho_to =  lithology_df._get_value(r2,'to') 
+                                    litho_from =  lithology_df._get_value(r2,'from') 
+                                    length = (lithology_df._get_value(r2,'to')) - (lithology_df._get_value(r2,'from'))
+                                    start_z =  dist_func(size=1, loc= length - float(errlength), scale= float(errlength))
+                                    new_coords3.loc[r2, 'from'] = dist_func(size=1, loc= litho_from - float(errlength), scale=float(errlength))  
+                                    new_coords3.loc[r2, 'to'] = dist_func(size=1, loc= litho_to - float(errlength), scale=float(errlength))  
+
+                            elif survey_df._get_value(r1,'depth') != 0 or  lithology_df._get_value(r2,'from') !=  0 and first_depth_from_zero == False : 
+                                first_depth_from_zero = True
+                                if survey_df._get_value(r1,'depth') != 0 :
+                                    start_x =  survey_df._get_value(r1,'angle1')
+                                    angle1 = dist_func(size=1, loc=(start_x) - float(erraz), scale=float(erraz))  
+                                    new_coords2.loc[r1, 'angle1'] = angle1 
+                                    start_y =  survey_df._get_value(r1,'angle2')
+                                    angle2 = dist_func(size=1, loc=(start_y) - float(errdip), scale=float(errdip))  
+                                    new_coords2.loc[r1, 'angle2'] = angle2 
+                                    collarID_ = survey_df._get_value(r1,'collarId')
+                                    new_coords2.loc[r1, 'depth'] = '0'
+                                    unit = survey_df._get_value(r1,'unit')
+                                    new_coords2.loc[len(new_coords2.index)] = [collarID_, '0', angle1,angle2,unit] 
+                                if lithology_df._get_value(r2,'from') !=  0 :
+                                    litho_to =  lithology_df._get_value(r2,'to') 
+                                    litho_from =  lithology_df._get_value(r2,'from') 
+                                    length = (lithology_df._get_value(r2,'to')) - (lithology_df._get_value(r2,'from'))
+                                    start_z =  dist_func(size=1, loc= length - float(errlength), scale=float(errlength))
+                                    from_ = dist_func(size=1, loc= litho_from - float(errlength), scale=float(errlength))  
+                                    new_coords3.loc[r2, 'from'] = from_
+                                    to_= dist_func(size=1, loc= litho_to - float(errlength), scale= float(errlength))  
+                                    new_coords3.loc[r2, 'to'] = to_
+                                    
+                                    collarID_ = lithology_df._get_value(r2,'collarId')
+                                    fromX_ = lithology_df._get_value(r2,'fromX')
+                                    fromY_ = lithology_df._get_value(r2,'fromY')
+                                    fromZ_ = lithology_df._get_value(r2,'fromZ')
+                                    layerId_ = lithology_df._get_value(r2,'layerId')
+                                    toX_ = lithology_df._get_value(r2,'toX')
+                                    toY_ = lithology_df._get_value(r2,'toY')
+                                    toZ_ = lithology_df._get_value(r2,'toZ')
+                                    propertyCode_ = lithology_df._get_value(r2,'propertyCode')
+                                    property1_ = lithology_df._get_value(r2,'property1')
+                                    property2_ = lithology_df._get_value(r2,'property2')
+                                    unit_ = lithology_df._get_value(r2,'unit')
+                                    new_coords3.loc[len(new_coords3.index)] = [collarID_, '0', from_,to_,fromX_,fromY_,fromZ_,'layerId_',toX_,toY_, toZ_,propertyCode_,property1_,property2_,unit] 
+                              
 
                     prev_collarID = cur_collarId
-                            #else: go to next hole
+                            
 
             if global_bool_drillhole == 'True' :
-                    #file_name1 = 'local_drillhole_collar' + "_" + str(m) + ".csv"
-                    #new_coords1.to_csv(output_location + '/'  +  file_name1, index=False)  
-
                 file_name2 = 'global_drillhole_survey' + "_" + str(m) + ".csv"
-                new_coords2.to_csv(output_location + '/'  +  file_name2, index=False)  
+                sorted_new_coords2 = new_coords2.sort_values(by=['collarId','depth'], ascending=[True,True])
+                sorted_new_coords2.to_csv(output_location1 + '/'  +  file_name2, index=False)  
+                drillhole_survey_perturbed_csv_loop3d(output_location1 , output_location2 , file_name2)
 
                 file_name3 = 'global_drillhole_lithology' + "_" + str(m) + ".csv"
-                new_coords3.to_csv(output_location + '/'  +  file_name3, index=False)  
+                sorted_new_coords3 = new_coords3.sort_values(by=['collarId','from'], ascending=[True,True])
+                sorted_new_coords3.to_csv(output_location1 + '/'  +  file_name3, index=False)
+                drillhole_lithology_perturbed_csv_loop3d(output_location1 , output_location2 , file_name3)
+                
+                
+                
+                
+def interface_contact_perturbed_csv_loop3d(output_location1 , output_location2 , file_name):
+    '''
+        Function: generates perturbed interface contact csv files to loop3d files in the path given.
+        Input:filename with path in output_location1.
+        Output:loop3d file in output_location2
+    '''
+    
+    intf_contact = pd.read_csv(output_location1 + '/' + file_name)
+    file_name = file_name.strip('.csv')
+    LF.CreateBasic(output_location2+ '/' + file_name + ".loop3d")
+    #intf_contact = pd.read_csv(output_location1 + '/' + file_name)
+    contactData  = np.zeros(intf_contact.shape[0] ,LF.contactObservationType)   
+    contactData ['layerId'] = intf_contact['layerId']
+    contactData ['easting'] = intf_contact['easting']
+    contactData ['northing'] = intf_contact['northing']
+    contactData['altitude'] = intf_contact['altitude']
+    contactData['type'] = intf_contact['type']
+    resp = LF.Set(output_location2 + '/' + file_name + ".loop3d",
+                               "contacts",
+                               data=contactData,
+                               verbose=True)
+
+
+    if resp["errorFlag"]:
+        print(resp["errorString"])
+
+    #use for testing or reading loop3d file
+    #resp = LF.Get(output_location2 + '/' + file_name + ".loop3d","contacts")     
+    #if resp['errorFlag']:
+    #    df = pd.DataFrame()
+    #else:
+    #    df = pd.DataFrame.from_records(resp['value'],columns=['layerId','easting','northing','altitude','type'])       
+
+    #print(df)   
+
+
+def interface_fault_perturbed_csv_loop3d(output_location1 , output_location2 , file_name):
+    '''
+        Function: generates perturbed interface fault csv files to loop3d files in the path given.
+        Input:filename with path in output_location1.
+        Output:loop3d file in output_location2
+    '''
+    intf_fault = pd.read_csv(output_location1 + '/' + file_name)
+    file_name = file_name.strip('.csv')
+    LF.CreateBasic(output_location2+ '/' + file_name + ".loop3d")
+    contactData  = np.zeros(intf_fault.shape[0] ,LF.faultObservationType)   
+    contactData ['eventId'] = intf_fault['eventId']
+    contactData ['easting'] = intf_fault['easting']
+    contactData ['northing'] = intf_fault['northing']
+    contactData['altitude'] = intf_fault['altitude']
+    contactData['type'] = intf_fault['type']
+    contactData['dipDir'] = intf_fault['dipDir']
+    contactData['dip'] = intf_fault['dip']
+    contactData['dipPolarity'] = intf_fault['dipPolarity']
+    contactData['val'] = intf_fault['val']
+    contactData['displacement'] = intf_fault['displacement']
+    contactData['posOnly'] = intf_fault['posOnly']
+        
+    resp = LF.Set(output_location2 + '/' + file_name + ".loop3d",
+                               "faultObservations",
+                               data=contactData,
+                               verbose=True)
+
+
+    if resp["errorFlag"]:
+        print(resp["errorString"])
+
+    #use for testing or reading loop3d file
+    #resp = LF.Get(output_location2 + '/' + file_name + ".loop3d","faultObservations")     
+    #if resp['errorFlag']:
+    #    df = pd.DataFrame()
+    #else:
+    #    df = pd.DataFrame.from_records(resp['value'],columns=['eventId','easting','northing','altitude','type','dipDir','dip','dipPolarity','val','displacement','posOnly'])      
+
+    #print(df)   
+        
+        
+def orientaion_stratigraphy_perturbed_csv_loop3d(output_location1 , output_location2 , file_name):
+    '''
+        Function: generates perturbed orienation stratigraphy csv files to loop3d files in the path given.
+        Input:filename with path in output_location1.
+        Output:loop3d file in output_location2
+    '''
+    orienation_strati = pd.read_csv(output_location1 + '/' + file_name)
+    file_name = file_name.strip('.csv')
+    #print(file_name)
+    LF.CreateBasic(output_location2+ '/' + file_name + ".loop3d")
+        
+    orientaionData  = np.zeros(orienation_strati.shape[0] ,LF.stratigraphicObservationType)   
+    orientaionData ['layerId'] = orienation_strati['layerId']
+    orientaionData ['easting'] = orienation_strati['easting']
+    orientaionData ['northing'] = orienation_strati['northing']
+    orientaionData['altitude'] = orienation_strati['altitude']
+    orientaionData['type'] = orienation_strati['type']
+    orientaionData['dipDir'] = orienation_strati['dipDir']
+    orientaionData['dip'] = orienation_strati['dip']
+    orientaionData['dipPolarity'] = orienation_strati['dipPolarity']
+    orientaionData['layer'] = orienation_strati['layer']
+        
+        
+    resp = LF.Set(output_location2 + '/' + file_name + ".loop3d",
+                               "stratigraphicObservations",
+                               data=orientaionData,
+                               verbose=True)
+
+
+    if resp["errorFlag"]:
+        print(resp["errorString"])
+
+    #use for testing or reading loop3d file
+    #resp = LF.Get(output_location2 + '/' + file_name + ".loop3d","stratigraphicObservations")     
+    #if resp['errorFlag']:
+    #    df = pd.DataFrame()
+    #else:
+    #    df = pd.DataFrame.from_records(resp['value'],columns=['layerId', 'easting','northing','altitude','type','dipDir','dip','dipPolarity','layer'])  
+
+        #print(df)   
+        
+        
+def orienation_fault_perturbed_csv_loop3d(output_location1 , output_location2 , file_name):
+    '''
+        Function: generates perturbed orienation fault csv files to loop3d files in the path given.
+        Input:filename with path in output_location1.
+        Output:loop3d file in output_location2
+    '''
+    intf_fault = pd.read_csv(output_location1 + '/' + file_name)
+    file_name = file_name.strip('.csv')
+    LF.CreateBasic(output_location2+ '/' + file_name + ".loop3d")
+    contactData  = np.zeros(intf_fault.shape[0] ,LF.faultObservationType)   
+    contactData ['eventId'] = intf_fault['eventId']
+    contactData ['easting'] = intf_fault['easting']
+    contactData ['northing'] = intf_fault['northing']
+    contactData['altitude'] = intf_fault['altitude']
+    contactData['type'] = intf_fault['type']
+    contactData['dipDir'] = intf_fault['dipDir']
+    contactData['dip'] = intf_fault['dip']
+    contactData['dipPolarity'] = intf_fault['dipPolarity']
+    contactData['val'] = intf_fault['val']
+    contactData['displacement'] = intf_fault['displacement']
+    contactData['posOnly'] = intf_fault['posOnly']
+        
+    resp = LF.Set(output_location2 + '/' + file_name + ".loop3d",
+                               "faultObservations",
+                               data=contactData,
+                               verbose=True)
+
+
+    if resp["errorFlag"]:
+        print(resp["errorString"])
+
+    #use for testing or reading loop3d file
+    #resp = LoopProjectFile.Get(output_location2 + '/' + file_name + ".loop3d","faultObservations")     
+    #if resp['errorFlag']:
+    #    df = pd.DataFrame()
+    #else:
+        #    df = pd.DataFrame.from_records(resp['value'],columns=['eventId','easting','northing','altitude','type','dipDir','dip','dipPolarity','val','displacement','posOnly'])       
+
+    #print(df)   
+
+def drillhole_collar_csv_loop3d(output_location1 , output_location2 , file_name):
+    '''
+        Function: generates collar csv file(one file only) to loop3d files in the path given.
+        Input:filename with path in output_location1.
+        Output:loop3d file in output_location2
+    '''
+    collar = pd.read_csv(output_location1 + '/' + file_name)
+    file_name = file_name.strip('.csv')
+    LF.CreateBasic(output_location2+ '/' + file_name + ".loop3d")
+    
+    drillholeData  = np.zeros(collar.shape[0] ,LF.drillholeDescriptionType)   
+    drillholeData ['collarId'] = collar['collarId']
+    drillholeData ['holeName'] = collar['holeName']
+    drillholeData ['surfaceX'] = collar['surfaceX']
+    drillholeData['surfaceY'] = collar['surfaceY']
+    drillholeData['surfaceZ'] = collar['surfaceZ']
+    resp = LF.Set(output_location2 + '/' + file_name + ".loop3d",
+                               "drillholeLog",
+                               data=drillholeData,
+                               verbose=True)
+    if resp["errorFlag"]:
+        print(resp["errorString"])
+
+    #resp = LoopProjectFile.Get(output_location2 + '/' + file_name + ".loop3d","drillholeLog")     
+    #if resp['errorFlag']:
+    #    df = pd.DataFrame()
+    #else:
+       #df = pd.DataFrame.from_records(resp['value'],columns=['collarId','holeName','surfaceX','surfaceY','surfaceZ'])       
+
+    #print(df)
+
+
+def drillhole_survey_perturbed_csv_loop3d(output_location1 , output_location2 , file_name):
+    '''
+        Function: generates perturbed survay csv files to loop3d files in the path given.
+        Input:filename with path in output_location1.
+        Output:loop3d file in output_location2
+    '''
+    survey = pd.read_csv(output_location1 + '/' + file_name)
+    file_name = file_name.strip('.csv')
+    LF.CreateBasic(output_location2+ '/' + file_name + ".loop3d")
+    
+    drillholeData  = np.zeros(survey.shape[0] ,LF.drillholeSurveyType)   
+    drillholeData ['collarId'] = survey['collarId']
+    drillholeData ['depth'] = survey['depth']
+    drillholeData ['angle1'] = survey['angle1']
+    drillholeData['angle2'] = survey['angle2']
+    drillholeData['unit'] = survey['unit']
+    resp = LF.Set(output_location2 + '/' + file_name + ".loop3d",
+                               "drillholeSurveys",
+                               data=drillholeData,
+                               verbose=True)
+    if resp["errorFlag"]:
+        print(resp["errorString"])
+
+    #use for testing or reading loop3d file
+    #resp = LoopProjectFile.Get(output_location2 + '/' + file_name + ".loop3d,"drillholeSurveys")     
+    #if resp['errorFlag']:
+ #      df = pd.DataFrame()
+    #else:
+#       df = pd.DataFrame.from_records(resp['value'],columns=['collarId','depth','angle1','angle2','unit'])
+
+    #print(df)
+
+
+
+def drillhole_lithology_perturbed_csv_loop3d(output_location1 , output_location2 , file_name):
+    '''
+        Function: generates perturbed lithology csv files to loop3d files in the path given.
+        Input:filename with path in output_location1.
+        Output:loop3d file in output_location2
+    '''
+    lithology1 = pd.read_csv(output_location1 + '/' + file_name)
+    file_name = file_name.strip('.csv')
+    LF.CreateBasic(output_location2+ '/' + file_name + ".loop3d")
+
+
+    drillholeData2  = np.zeros(lithology1.shape[0] ,LF.drillholeObservationType)   
+    drillholeData2['collarId'] = lithology1['collarId']
+    drillholeData2['from'] =  lithology1['from']
+    drillholeData2['to'] = lithology1['to']
+    drillholeData2['fromX'] = lithology1['fromX']
+    drillholeData2['fromY'] = lithology1['fromY']
+    drillholeData2['fromZ'] = lithology1['fromZ']
+    drillholeData2['layerId']  = lithology1['layerId']
+    drillholeData2['toX'] = lithology1['toX']
+    drillholeData2['toY'] = lithology1['toY']
+    drillholeData2['toZ'] =  lithology1['toZ']
+    drillholeData2['propertyCode'] = lithology1['propertyCode']
+    drillholeData2['property1'] = lithology1['property1']
+    drillholeData2['property2'] =lithology1['property2']
+    drillholeData2['unit'] =lithology1['unit']
+
+    resp = LF.Set(output_location2 + '/' + file_name + ".loop3d",
+                               "drillholeObservations",
+                               data=drillholeData2,
+                               verbose=True)
+    if resp["errorFlag"]:
+        print(resp["errorString"])
+    
+    #use for testing or reading loop3d file
+    #resp = LoopProjectFile.Get(output_location2 + '/' + file_name + ".loop3d,"drillholeObservations")     
+    #if resp['errorFlag']:
+#       df = pd.DataFrame()
+    #else:
+    #    df = pd.DataFrame.from_records(resp['value'],columns=['collarId','from','to','fromX','fromY','fromZ','layerId','toX','toY','toZ','propertyCode','property1','property2','unit'])
+
+    #print(df)
+
+
 
 
 

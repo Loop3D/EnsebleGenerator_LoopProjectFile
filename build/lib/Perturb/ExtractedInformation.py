@@ -1,5 +1,5 @@
 import netCDF4
-import Perturb.LoopProjectFile
+import Perturb.LoopProjectFile as LF
 import Perturb.LoopProjectFileUtils as LPFU 
 import numpy
 
@@ -290,7 +290,7 @@ def SetDrillholeLog(root, data, append=False, verbose=False):
     if resp["errorFlag"]:
         siGroup = eiGroup.createGroup("DrillholeInformation")
         siGroup.createDimension("index",None)
-        drillholeDescriptionType_t = siGroup.createCompoundType(LoopProjectFile.drillholeDescriptionType,'DrillholeDescription')
+        drillholeDescriptionType_t = siGroup.createCompoundType(LF.drillholeDescriptionType,'DrillholeDescription')
         siGroup.createVariable('drillholeDescriptions',drillholeDescriptionType_t,('index'),zlib=True,complevel=9)
     else:
         siGroup = resp["value"]
