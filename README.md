@@ -21,20 +21,20 @@ https://github.com/Loop3D/ensemble_generator
 
 
 ## workflow of EnsembleGenerator_LoopProjectFile:
-Source of model and data: map2loop
-1.input files in Netcdf_map2l in the following link.
-	http://localhost:8888/tree/Netcdf_map2l
-2.Perturb_config.ini which has all the inputs required for perturbation in the following 
-	http://localhost:8888/tree/notebook
-3.run the jupyter notebook in the following.
-	http://localhost:8888/tree/notebook
-	http://localhost:8888/notebooks/notebook/Perturb_interface_orientation_drillhole.ipynb
-4.Output file both csv and loop3d formats available in the following link
-	http://localhost:8888/tree/egen_runs
+Source of model and data: map2loop   
+1.input files in Netcdf_map2l in the following link.   
+	http://localhost:8888/tree/Netcdf_map2l   
+2.Perturb_config.ini which has all the inputs required for perturbation in the following    
+	http://localhost:8888/tree/notebook   
+3.run the jupyter notebook in the following.   
+	http://localhost:8888/tree/notebook   
+	http://localhost:8888/notebooks/notebook/Perturb_interface_orientation_drillhole.ipynb   
+4.Output file both csv and loop3d formats available in the following link   
+	http://localhost:8888/tree/egen_runs   
 	
 ## Where to start for EnsembleGenerator_LoopProjectFile :
 
-1. Install the dependencies:
+1. Install the dependencies:   
 - LoopProjectFile (https://github.com/Loop3D/LoopProjectFile) <br>
 `Add LoopProjectFile code` <br>
 - pandas (https://pandas.pydata.org/)  <br>
