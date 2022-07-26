@@ -1,7 +1,7 @@
 # *EnsembleGenerator_LoopProjectFile* <br> 
 ***EnsembleGenerator_LoopProjectFile*** is a python library that perturbes the input data in LoopProjectFile(netcdf format) from map2l.It provides Functions for generating and analysing ensembles of geological models.Perturbed files are to the number of perturbation specified in .ini file.The output are available in csv and loop3d format.
 
-**Mark Jessell**(Mark.Jessel@uwa.edu.au) contributed the original idea, The code development is led by **Kavitha Madaiah** (kavitha.madaiah@uwa.edu.au). **Evren Pakyuz-Charrier1** has provided significant inputs from his phd work .**Mark Lindsay** has made significant contributions to code developed using csv files as input.
+**Mark Jessell**(Mark.Jessell@uwa.edu.au) contributed the original idea, The code development is led by **Kavitha Madaiah** (kavitha.madaiah@uwa.edu.au). **Evren Pakyuz-Charrier1** has provided significant inputs from his phd work .**Mark Lindsay** has made significant contributions to code developed using csv files as input.
 
 
 # What is a Loop Project File?
